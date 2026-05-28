@@ -1,0 +1,5037 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>إدارة مؤتمر كنز ولا CANS - نسخة منسقة ومنظفة</title>
+    <meta name="theme-color" content="#164a8b" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="إدارة المؤتمر" />
+    <style>
+      :root {
+        --blue: #123b7a;
+        --blue-dark: #08265a;
+        --cyan: #0aa6b7;
+        --green: #14804a;
+        --red: #b42318;
+        --orange: #b45309;
+        --bg: #f4f8fd;
+        --card: #ffffff;
+        --soft: #eef6ff;
+        --line: #d9e3f0;
+        --text: #172033;
+        --muted: #667085;
+        --shadow: 0 14px 38px rgba(18, 59, 122, 0.12);
+        --radius: 18px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        min-height: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(135deg, #f7fbff, #eef7fa);
+        color: var(--text);
+        font-family: Arial, Tahoma, sans-serif;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font-family: inherit;
+        font-size: 14px;
+      }
+      button {
+        cursor: pointer;
+      }
+      textarea {
+        resize: vertical;
+      }
+      .app {
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        position: fixed;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 270px;
+        background: linear-gradient(180deg, var(--blue), var(--blue-dark));
+        color: #fff;
+        padding: 18px 14px;
+        overflow: auto;
+        z-index: 20;
+      }
+      .main {
+        flex: 1;
+        margin-right: 270px;
+        padding: 22px;
+        min-width: 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 8px 6px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+        margin-bottom: 12px;
+      }
+      .brand-logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 15px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.15);
+        font-weight: 900;
+        font-size: 22px;
+      }
+      .brand strong {
+        font-size: 18px;
+      }
+      .brand small {
+        display: block;
+        color: #d9eaff;
+        margin-top: 3px;
+      }
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .nav button {
+        border: 0;
+        background: transparent;
+        color: #dbeafe;
+        text-align: right;
+        padding: 12px 13px;
+        border-radius: 14px;
+        font-weight: 800;
+      }
+      .nav button.active,
+      .nav button:hover {
+        background: rgba(255, 255, 255, 0.16);
+        color: #fff;
+      }
+      .sidebar-save {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.16);
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+        animation: fade 0.16s ease;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0.35;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .title h1,
+      .title h2 {
+        margin: 0;
+        color: var(--blue-dark);
+        font-size: 26px;
+      }
+      .title p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 13px;
+        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+        font-weight: 800;
+      }
+      .btn.primary {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+      }
+      .btn.soft {
+        background: #eef6ff;
+        border-color: #c9ddf8;
+        color: var(--blue);
+      }
+      .btn.green {
+        background: #edfbf3;
+        border-color: #b7efcf;
+        color: var(--green);
+      }
+      .btn.danger {
+        background: #fff1f1;
+        border-color: #ffd2d2;
+        color: var(--red);
+      }
+      .btn.small {
+        padding: 7px 10px;
+        border-radius: 10px;
+        font-size: 13px;
+      }
+      .btn.full {
+        width: 100%;
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .panel,
+      .hero {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+      .hero {
+        position: relative;
+        overflow: hidden;
+      }
+      .hero:after {
+        content: "";
+        position: absolute;
+        left: -60px;
+        bottom: -80px;
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle, #dcfbff, transparent 68%);
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+      }
+      .hero-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .conference-word {
+        font-weight: 900;
+        color: var(--cyan);
+        font-size: 20px;
+      }
+      .hero h1 {
+        margin: 4px 0;
+        color: var(--blue-dark);
+        font-size: 36px;
+      }
+      .chip {
+        display: inline-flex;
+        gap: 7px;
+        align-items: center;
+        background: #f2f8ff;
+        border: 1px solid #d5e8ff;
+        color: var(--blue);
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-weight: 900;
+      }
+      .date-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+        gap: 10px;
+        max-width: 470px;
+        margin-top: 10px;
+      }
+      .date-tile {
+        border: 1px solid #cbdff8;
+        background: linear-gradient(180deg, #fff, #f4f8ff);
+        border-radius: 17px;
+        padding: 12px;
+      }
+      .date-tile span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+      }
+      .date-tile strong {
+        display: block;
+        color: var(--blue-dark);
+        margin-top: 5px;
+        line-height: 1.35;
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+      .grid.two {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .grid.three {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .grid.four {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .grid.five {
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+      }
+      .kpi {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 17px;
+        padding: 15px;
+        box-shadow: 0 8px 24px rgba(18, 59, 122, 0.08);
+      }
+      .kpi span {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .kpi strong {
+        display: block;
+        margin-top: 8px;
+        color: var(--blue-dark);
+        font-size: 22px;
+      }
+      label {
+        display: block;
+        color: #334155;
+        font-weight: 800;
+        line-height: 1.75;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: #fff;
+        padding: 10px 12px;
+        color: var(--text);
+        outline: none;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #90b8f8;
+        box-shadow: 0 0 0 3px rgba(18, 59, 122, 0.1);
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.8;
+        margin: 8px 0;
+      }
+      .section-title {
+        margin: 0 0 12px;
+        color: var(--blue-dark);
+      }
+      .table-tools {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .search {
+        max-width: 290px;
+      }
+      .table-wrap {
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #fff;
+      }
+      table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 850px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #edf1f7;
+        padding: 10px;
+        text-align: right;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      th {
+        background: #f6f9fe;
+        color: var(--blue-dark);
+        font-size: 13px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      .badge {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-weight: 900;
+        font-size: 12px;
+        border: 1px solid transparent;
+      }
+      .badge.green {
+        background: #ecfdf3;
+        color: var(--green);
+        border-color: #abefc6;
+      }
+      .badge.red {
+        background: #fff1f1;
+        color: var(--red);
+        border-color: #ffd2d2;
+      }
+      .badge.orange {
+        background: #fff7ed;
+        color: var(--orange);
+        border-color: #fed7aa;
+      }
+      .mini-input {
+        min-width: 105px;
+        padding: 7px 9px;
+        border-radius: 10px;
+      }
+      .money-totals {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+      }
+      .mini-total {
+        background: #f7fbff;
+        border: 1px solid #d7e8ff;
+        border-radius: 14px;
+        padding: 8px 10px;
+      }
+      .mini-total span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .mini-total strong {
+        font-size: 15px;
+        color: var(--blue-dark);
+      }
+      .manager-grid,
+      .committee-grid,
+      .report-grid,
+      .backup-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .manager-card,
+      .committee-card,
+      .report-card,
+      .backup-card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px;
+        box-shadow: 0 8px 24px rgba(18, 59, 122, 0.07);
+      }
+      .manager-card h3,
+      .committee-card h3,
+      .report-card h3 {
+        margin: 0 0 10px;
+        color: var(--blue-dark);
+      }
+      .tag-list {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #d7e8ff;
+        background: #f2f8ff;
+        color: var(--blue);
+        border-radius: 999px;
+        padding: 6px 9px;
+        font-weight: 800;
+      }
+      .tag button {
+        border: 0;
+        background: transparent;
+        color: var(--red);
+        font-weight: 900;
+        padding: 0;
+      }
+      .expense-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.8fr);
+        gap: 16px;
+      }
+      .tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .tab {
+        border: 1px solid #cfe0f7;
+        background: #f6faff;
+        color: var(--blue);
+        font-weight: 900;
+        border-radius: 999px;
+        padding: 9px 13px;
+      }
+      .tab.active {
+        background: var(--blue);
+        color: #fff;
+        border-color: var(--blue);
+      }
+      .quick-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .quick-buttons button {
+        border: 1px solid #cfe0f7;
+        background: #fff;
+        color: var(--blue);
+        font-weight: 900;
+        border-radius: 999px;
+        padding: 8px 11px;
+      }
+      .quick-buttons button.active {
+        background: var(--blue);
+        color: #fff;
+        border-color: var(--blue);
+      }
+      .calc-box {
+        background: #f8fafc;
+        border: 1px dashed #cfd9e7;
+        border-radius: 16px;
+        padding: 12px;
+        margin: 12px 0;
+      }
+      .total-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 10px 12px;
+      }
+      .total-line strong {
+        color: var(--blue-dark);
+        font-size: 18px;
+      }
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .stat {
+        background: linear-gradient(180deg, #fff, #f7fbff);
+        border: 1px solid #d7e8ff;
+        border-radius: 16px;
+        padding: 12px;
+      }
+      .stat span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .stat strong {
+        display: block;
+        color: var(--blue-dark);
+        font-size: 20px;
+        margin-top: 5px;
+      }
+      .arrival-rank {
+        display: inline-grid;
+        place-items: center;
+        min-width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        background: var(--blue);
+        color: #fff;
+        font-weight: 900;
+      }
+      .arrival-time {
+        font-size: 12px;
+        font-weight: 800;
+        color: #344054;
+      }
+      .backup-card {
+        text-align: right;
+        cursor: pointer;
+      }
+      .backup-card strong {
+        display: block;
+        color: var(--blue-dark);
+        font-size: 17px;
+      }
+      .backup-card span {
+        display: block;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 80;
+        padding: 16px;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-card {
+        width: min(760px, 100%);
+        max-height: 90vh;
+        overflow: auto;
+        background: #fff;
+        border-radius: 22px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+      }
+      .modal-card h2 {
+        margin: 0 0 12px;
+        color: var(--blue-dark);
+      }
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        margin-top: 14px;
+      }
+      .toast {
+        position: fixed;
+        left: 18px;
+        bottom: 18px;
+        background: #0f172a;
+        color: #fff;
+        padding: 11px 14px;
+        border-radius: 14px;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+        display: none;
+        z-index: 100;
+      }
+      .toast.show {
+        display: block;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .mobile-cards {
+        display: none;
+      }
+      .mobile-card {
+        border: 1px solid #cfe0f3;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff, #f6fbff);
+        box-shadow: 0 10px 24px rgba(18, 59, 122, 0.1);
+        padding: 13px;
+        margin: 11px 0;
+      }
+      .mobile-card:nth-child(4n + 1) {
+        background: linear-gradient(180deg, #fff, #eef7ff);
+      }
+      .mobile-card:nth-child(4n + 2) {
+        background: linear-gradient(180deg, #fff, #effdf5);
+      }
+      .mobile-card:nth-child(4n + 3) {
+        background: linear-gradient(180deg, #fff, #fff7ed);
+      }
+      .mobile-card:nth-child(4n + 4) {
+        background: linear-gradient(180deg, #fff, #f7f2ff);
+      }
+      .mobile-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 9px;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed #d6e5f4;
+      }
+      .mobile-title {
+        font-weight: 900;
+        color: var(--blue-dark);
+        line-height: 1.4;
+      }
+      .mobile-no {
+        display: grid;
+        place-items: center;
+        min-width: 33px;
+        height: 33px;
+        border-radius: 12px;
+        background: var(--blue);
+        color: #fff;
+        font-weight: 900;
+      }
+      .mobile-line {
+        display: grid;
+        grid-template-columns: 105px minmax(0, 1fr);
+        gap: 8px;
+        align-items: center;
+        padding: 7px 0;
+        border-bottom: 1px dashed #dbe7f4;
+      }
+      .mobile-line:last-child {
+        border-bottom: 0;
+      }
+      .mobile-label {
+        font-size: 13px;
+        font-weight: 900;
+        color: var(--blue);
+      }
+      .mobile-value {
+        font-weight: 700;
+        word-break: break-word;
+      }
+      .mobile-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .mobile-actions .btn {
+        flex: 1;
+        min-width: 88px;
+      }
+      @media (max-width: 1150px) {
+        .kpi-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .manager-grid,
+        .committee-grid,
+        .report-grid,
+        .backup-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .grid.five,
+        .grid.four {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .expense-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 820px) {
+        .app {
+          display: block;
+        }
+        .sidebar {
+          position: sticky;
+          top: 0;
+          width: 100%;
+          bottom: auto;
+          border-radius: 0 0 22px 22px;
+          padding: 10px;
+          max-height: none;
+        }
+        .brand {
+          padding: 5px 4px 8px;
+          margin-bottom: 7px;
+        }
+        .brand-logo {
+          width: 38px;
+          height: 38px;
+        }
+        .nav {
+          flex-direction: row;
+          overflow: auto;
+          gap: 6px;
+          padding-bottom: 3px;
+        }
+        .nav button {
+          white-space: nowrap;
+          padding: 9px 11px;
+          font-size: 13px;
+        }
+        .sidebar-save {
+          display: none;
+        }
+        .main {
+          margin-right: 0;
+          padding: 12px;
+        }
+        .topbar {
+          flex-direction: column;
+        }
+        .hero h1 {
+          font-size: 28px;
+        }
+        .date-grid {
+          grid-template-columns: 1fr 1fr;
+          max-width: none;
+        }
+        .kpi-grid,
+        .manager-grid,
+        .committee-grid,
+        .report-grid,
+        .backup-grid,
+        .stat-grid {
+          grid-template-columns: 1fr;
+        }
+        .grid.two,
+        .grid.three,
+        .grid.four,
+        .grid.five {
+          grid-template-columns: 1fr;
+        }
+        .panel,
+        .hero {
+          padding: 14px;
+          border-radius: 18px;
+        }
+        .table-wrap {
+          border: 0;
+          background: transparent;
+          overflow: visible;
+        }
+        .table-wrap table {
+          display: none;
+        }
+        .mobile-cards {
+          display: block;
+        }
+        .search {
+          max-width: none;
+        }
+        .money-totals {
+          width: 100%;
+        }
+        .mini-total {
+          flex: 1;
+          min-width: 135px;
+        }
+        .toast {
+          left: 10px;
+          right: 10px;
+          bottom: 10px;
+          text-align: center;
+        }
+        .mobile-line {
+          grid-template-columns: 96px minmax(0, 1fr);
+          font-size: 13.5px;
+        }
+        .btn {
+          font-size: 14px;
+        }
+      }
+      @media (max-width: 460px) {
+        .date-grid {
+          grid-template-columns: 1fr;
+        }
+        .title h1,
+        .title h2 {
+          font-size: 23px;
+        }
+        .kpi strong {
+          font-size: 20px;
+        }
+        .btn {
+          padding: 9px 11px;
+        }
+        .mobile-card {
+          border-radius: 17px;
+          padding: 11px;
+        }
+        .mobile-line {
+          grid-template-columns: 88px minmax(0, 1fr);
+        }
+      }
+      @media print {
+        .sidebar,
+        .actions,
+        .btn,
+        .modal,
+        .toast,
+        .table-tools input,
+        .table-tools select {
+          display: none !important;
+        }
+        .main {
+          margin: 0;
+          padding: 0;
+        }
+        .page {
+          display: block !important;
+        }
+        .panel,
+        .hero,
+        .kpi {
+          box-shadow: none;
+          border-color: #aaa;
+        }
+        body {
+          background: #fff;
+        }
+        .mobile-cards {
+          display: none !important;
+        }
+        .table-wrap table {
+          display: table !important;
+        }
+      }
+
+      /* =========================================================
+       UI Polish v2 - تحسين الخطوط والألوان والبطاقات
+       ملاحظة: هذا البلوك موضوع في آخر الـCSS ليعمل كطبقة تحسين آمنة
+       بدون تغيير منطق الحفظ أو الحسابات أو الاستيراد والتصدير.
+    ========================================================= */
+      :root {
+        --blue: #164a8b;
+        --blue-dark: #0b2f5f;
+        --cyan: #0ea5b7;
+        --green: #15803d;
+        --red: #b42318;
+        --orange: #b65f00;
+        --purple: #6d5dfc;
+        --bg: #f3f7fb;
+        --card: #ffffff;
+        --soft: #eef6ff;
+        --line: #d7e2ef;
+        --text: #182033;
+        --muted: #64748b;
+        --shadow: 0 16px 42px rgba(15, 47, 95, 0.11);
+        --shadow-soft: 0 8px 22px rgba(15, 47, 95, 0.08);
+        --radius: 20px;
+        --font-ar: "Cairo", "Tajawal", "Segoe UI", Tahoma, Arial, sans-serif;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(14, 165, 183, 0.14),
+            transparent 32rem
+          ),
+          linear-gradient(135deg, #f8fbff 0%, #eef6ff 48%, #f6fbf9 100%);
+        color: var(--text);
+        font-family: var(--font-ar);
+        font-size: 15px;
+        line-height: 1.65;
+        letter-spacing: 0.01em;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(22, 74, 139, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(22, 74, 139, 0.035) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.45),
+          transparent 70%
+        );
+        z-index: -1;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font-family: var(--font-ar);
+        font-size: 14.5px;
+      }
+      input,
+      select,
+      textarea {
+        min-height: 44px;
+        transition:
+          border-color 0.18s ease,
+          box-shadow 0.18s ease,
+          background 0.18s ease;
+      }
+      textarea {
+        min-height: 88px;
+        line-height: 1.8;
+      }
+      label {
+        font-size: 14px;
+        color: #26364d;
+      }
+      input::placeholder,
+      textarea::placeholder {
+        color: #94a3b8;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #7fb5ef;
+        box-shadow: 0 0 0 4px rgba(22, 74, 139, 0.11);
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible {
+        outline: 3px solid rgba(14, 165, 183, 0.32);
+        outline-offset: 2px;
+      }
+
+      .sidebar {
+        width: 286px;
+        padding: 20px 16px;
+        background:
+          radial-gradient(
+            circle at 20% 0%,
+            rgba(255, 255, 255, 0.18),
+            transparent 24rem
+          ),
+          linear-gradient(180deg, #164a8b 0%, #0b2f5f 55%, #071d3f 100%);
+        box-shadow: -10px 0 32px rgba(15, 47, 95, 0.14);
+      }
+      .main {
+        margin-right: 286px;
+        padding: 26px;
+        max-width: 1680px;
+      }
+      .brand {
+        gap: 12px;
+        padding: 8px 6px 18px;
+        margin-bottom: 14px;
+      }
+      .brand-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 18px;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.26),
+          rgba(255, 255, 255, 0.1)
+        );
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+          0 10px 22px rgba(0, 0, 0, 0.12);
+      }
+      .brand strong {
+        font-size: 19px;
+        letter-spacing: 0;
+      }
+      .brand small {
+        color: #cfe7ff;
+        font-size: 12.5px;
+      }
+      .nav button {
+        position: relative;
+        padding: 12px 14px;
+        border-radius: 16px;
+        font-size: 14.5px;
+        transition:
+          background 0.18s ease,
+          transform 0.18s ease,
+          color 0.18s ease;
+      }
+      .nav button:hover {
+        transform: translateX(-2px);
+      }
+      .nav button.active {
+        background: rgba(255, 255, 255, 0.18);
+        box-shadow:
+          inset 3px 0 0 rgba(255, 255, 255, 0.7),
+          0 8px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .topbar {
+        align-items: center;
+        margin-bottom: 18px;
+      }
+      .title h1,
+      .title h2 {
+        font-size: 28px;
+        line-height: 1.35;
+        font-weight: 900;
+        letter-spacing: -0.015em;
+      }
+      .title p {
+        font-size: 14.5px;
+        color: #667085;
+        margin-top: 8px;
+      }
+      .section-title {
+        font-size: 19px;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .section-title::before {
+        content: "";
+        width: 8px;
+        height: 24px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--cyan), var(--blue));
+      }
+
+      .btn,
+      .tab,
+      .quick-buttons button,
+      .backup-card {
+        transition:
+          transform 0.16s ease,
+          box-shadow 0.16s ease,
+          background 0.16s ease,
+          border-color 0.16s ease;
+      }
+      .btn:hover,
+      .tab:hover,
+      .quick-buttons button:hover,
+      .backup-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(15, 47, 95, 0.1);
+      }
+      .btn.primary {
+        background: linear-gradient(135deg, var(--blue), #0b3b78);
+        border-color: #0b3b78;
+      }
+      .btn.soft {
+        background: linear-gradient(180deg, #f5fbff, #eaf4ff);
+        border-color: #c9ddf8;
+        color: var(--blue-dark);
+      }
+      .btn.green {
+        background: #edfbf3;
+        border-color: #b7efcf;
+        color: #126c36;
+      }
+      .btn.danger {
+        background: #fff3f3;
+        border-color: #ffd2d2;
+        color: #a51c14;
+      }
+
+      .panel,
+      .hero,
+      .manager-card,
+      .committee-card,
+      .report-card,
+      .backup-card,
+      .kpi,
+      .mobile-card {
+        border: 1px solid rgba(215, 226, 239, 0.92);
+        box-shadow: var(--shadow-soft);
+        backdrop-filter: saturate(1.05) blur(2px);
+      }
+      .panel,
+      .hero {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 24px;
+        padding: 20px;
+      }
+      .hero {
+        background:
+          radial-gradient(
+            circle at left bottom,
+            rgba(14, 165, 183, 0.16),
+            transparent 18rem
+          ),
+          linear-gradient(135deg, #ffffff, #f3f9ff 55%, #f4fffb);
+      }
+      .hero:after {
+        background: radial-gradient(
+          circle,
+          rgba(14, 165, 183, 0.22),
+          transparent 68%
+        );
+      }
+      .conference-word {
+        color: var(--cyan);
+        font-size: 21px;
+        letter-spacing: 0.02em;
+      }
+      .hero h1 {
+        font-size: 38px;
+        font-weight: 900;
+        color: var(--blue-dark);
+      }
+      .chip {
+        background: linear-gradient(135deg, #eef8ff, #f4fffb);
+        border-color: #c8e3f5;
+        color: var(--blue-dark);
+        box-shadow: 0 8px 20px rgba(14, 165, 183, 0.08);
+      }
+      .date-tile {
+        border-color: #cbdff8;
+        background: linear-gradient(180deg, #fff, #f5f9ff);
+        box-shadow: 0 8px 18px rgba(22, 74, 139, 0.06);
+      }
+
+      .kpi {
+        position: relative;
+        overflow: hidden;
+        min-height: 114px;
+        padding: 17px 16px;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #fff, #f7fbff);
+      }
+      .kpi::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 6px;
+        background: linear-gradient(180deg, var(--cyan), var(--blue));
+      }
+      .kpi::after {
+        content: "";
+        position: absolute;
+        left: -24px;
+        bottom: -34px;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: rgba(14, 165, 183, 0.09);
+      }
+      .kpi:nth-child(2)::before {
+        background: linear-gradient(180deg, #22c55e, #15803d);
+      }
+      .kpi:nth-child(3)::before {
+        background: linear-gradient(180deg, #fb923c, #b65f00);
+      }
+      .kpi:nth-child(4)::before {
+        background: linear-gradient(180deg, #60a5fa, #164a8b);
+      }
+      .kpi:nth-child(5)::before {
+        background: linear-gradient(180deg, #a78bfa, #6d5dfc);
+      }
+      .kpi span {
+        font-size: 13.5px;
+        font-weight: 800;
+        color: #6b7280;
+      }
+      .kpi strong {
+        position: relative;
+        z-index: 1;
+        font-size: 24px;
+        font-weight: 900;
+        color: #0b2f5f;
+      }
+
+      .manager-card,
+      .committee-card,
+      .report-card,
+      .backup-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        padding: 16px;
+        background: linear-gradient(180deg, #ffffff, #f8fbff);
+      }
+      .manager-card::before,
+      .committee-card::before,
+      .report-card::before,
+      .backup-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 5px;
+        background: linear-gradient(90deg, var(--blue), var(--cyan));
+      }
+      .committee-card::before {
+        background: linear-gradient(90deg, #15803d, #0ea5b7);
+      }
+      .report-card::before {
+        background: linear-gradient(90deg, #6d5dfc, #0ea5b7);
+      }
+      .backup-card::before {
+        background: linear-gradient(90deg, #b65f00, #0ea5b7);
+      }
+      .manager-card:hover,
+      .committee-card:hover,
+      .report-card:hover,
+      .kpi:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+      .manager-card,
+      .committee-card,
+      .report-card,
+      .kpi {
+        transition:
+          transform 0.16s ease,
+          box-shadow 0.16s ease;
+      }
+      .manager-card h3,
+      .committee-card h3,
+      .report-card h3 {
+        font-size: 17px;
+        font-weight: 900;
+        margin-top: 2px;
+      }
+
+      .table-tools {
+        background: linear-gradient(180deg, #ffffff, #f8fbff);
+        border: 1px solid #e4edf7;
+        border-radius: 18px;
+        padding: 10px;
+      }
+      .table-wrap {
+        border-radius: 20px;
+        border-color: #dfe9f5;
+        box-shadow: 0 8px 22px rgba(15, 47, 95, 0.06);
+      }
+      table {
+        min-width: 820px;
+      }
+      th {
+        background: linear-gradient(180deg, #f6faff, #eef5ff);
+        color: #0b2f5f;
+        font-weight: 900;
+        font-size: 13.5px;
+      }
+      td {
+        font-size: 14px;
+        background: #fff;
+      }
+      tbody tr:nth-child(even) td {
+        background: #fbfdff;
+      }
+      tbody tr:hover td {
+        background: #f2f8ff;
+      }
+
+      .badge {
+        font-weight: 900;
+        border-radius: 999px;
+        padding: 6px 11px;
+      }
+      .badge:not(.green):not(.red):not(.orange) {
+        background: #eef2f7;
+        color: #475569;
+        border-color: #dbe4ee;
+      }
+      .tag {
+        box-shadow: 0 4px 12px rgba(22, 74, 139, 0.06);
+      }
+      .mini-total,
+      .stat {
+        background: linear-gradient(180deg, #ffffff, #f5f9ff);
+        border-color: #d7e8ff;
+        box-shadow: 0 8px 18px rgba(22, 74, 139, 0.05);
+      }
+      .stat strong,
+      .mini-total strong {
+        font-weight: 900;
+      }
+
+      .tabs {
+        background: #f5f9ff;
+        border: 1px solid #dce9f6;
+        border-radius: 999px;
+        padding: 5px;
+        width: max-content;
+        max-width: 100%;
+      }
+      .tab {
+        box-shadow: none;
+        border-color: transparent;
+        background: transparent;
+      }
+      .tab.active {
+        background: linear-gradient(135deg, var(--blue), #0b3b78);
+        box-shadow: 0 8px 18px rgba(22, 74, 139, 0.16);
+      }
+      .quick-buttons button.active {
+        background: linear-gradient(135deg, var(--blue), #0b3b78);
+      }
+      .calc-box {
+        background: linear-gradient(180deg, #fbfdff, #f3f8ff);
+        border-style: solid;
+        border-color: #dbe7f4;
+      }
+      .total-line strong {
+        font-size: 20px;
+        font-weight: 900;
+      }
+
+      .mobile-card {
+        background:
+          radial-gradient(
+            circle at left bottom,
+            rgba(14, 165, 183, 0.1),
+            transparent 12rem
+          ),
+          linear-gradient(180deg, #ffffff, #f8fbff);
+      }
+      .mobile-title {
+        font-size: 15px;
+      }
+      .mobile-no,
+      .arrival-rank {
+        background: linear-gradient(135deg, var(--blue), #0b3b78);
+        box-shadow: 0 8px 16px rgba(22, 74, 139, 0.16);
+      }
+      .mobile-label {
+        color: #0b4a86;
+      }
+      .mobile-value {
+        color: #1f2937;
+      }
+
+      .modal-card {
+        border-radius: 26px;
+        box-shadow: 0 30px 90px rgba(2, 6, 23, 0.24);
+      }
+      .toast {
+        font-weight: 800;
+        border-radius: 16px;
+        background: #0b2f5f;
+      }
+
+      @media (max-width: 1180px) {
+        .table-wrap {
+          border: 0;
+          background: transparent;
+          box-shadow: none;
+          overflow: visible;
+        }
+        .table-wrap table {
+          display: none;
+        }
+        .mobile-cards {
+          display: block;
+        }
+        .expense-layout {
+          grid-template-columns: 1fr;
+        }
+        .table-tools {
+          align-items: stretch;
+        }
+        .search {
+          max-width: none;
+          flex: 1;
+          min-width: 220px;
+        }
+      }
+      @media (max-width: 820px) {
+        .sidebar {
+          width: 100%;
+          padding: 12px 10px;
+          box-shadow: 0 10px 26px rgba(15, 47, 95, 0.16);
+        }
+        .main {
+          margin-right: 0;
+          padding: 14px;
+        }
+        .title h1,
+        .title h2 {
+          font-size: 24px;
+        }
+        .hero h1 {
+          font-size: 29px;
+        }
+        .panel,
+        .hero {
+          padding: 15px;
+          border-radius: 20px;
+        }
+        .table-tools {
+          padding: 9px;
+          border-radius: 16px;
+        }
+        .tabs {
+          width: 100%;
+          border-radius: 18px;
+        }
+        .tab {
+          flex: 1;
+        }
+      }
+      @media print {
+        body {
+          font-family: Tahoma, Arial, sans-serif;
+          background: #fff;
+          color: #111;
+        }
+        body::before {
+          display: none;
+        }
+        .panel,
+        .hero,
+        .kpi,
+        .manager-card,
+        .committee-card,
+        .report-card {
+          box-shadow: none !important;
+          background: #fff !important;
+          border-color: #999 !important;
+        }
+        .section-title::before,
+        .manager-card::before,
+        .committee-card::before,
+        .report-card::before,
+        .backup-card::before,
+        .kpi::before,
+        .kpi::after {
+          display: none !important;
+        }
+      }
+
+      /* Requested update: English digits + expense cards + meal dropdown */
+      .meal-picker-box {
+        margin: 0 0 14px;
+        padding: 12px;
+        border: 1px solid #dbe7f4;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff, #f4f9ff);
+      }
+      .meal-picker-box label {
+        margin: 0;
+      }
+      .meal-picker-box select {
+        margin-top: 6px;
+      }
+      #expenses .expenses-card-wrap {
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+        overflow: visible;
+      }
+      #expenses .expenses-card-wrap table {
+        display: none !important;
+      }
+      #expenses .expenses-card-wrap #expensesCards {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+        gap: 12px;
+      }
+      #expenses .expenses-card-wrap .mobile-card {
+        display: block;
+        margin: 0;
+        min-height: 100%;
+      }
+      #expenses .expenses-card-wrap .mobile-head {
+        border-bottom-style: solid;
+      }
+      #expenses .expenses-card-wrap .mobile-actions .btn {
+        min-width: 100%;
+      }
+
+
+      /* Requested update v3 - تثبيت بيانات المؤتمر + إصلاح قائمة الوجبات + وضوح الموبايل */
+      .section-head-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .section-head-row .section-title {
+        margin: 0;
+      }
+      .conference-lock-hint {
+        margin-top: 0;
+      }
+      .conference-settings-panel.is-locked input[data-setting^="conference."],
+      .conference-settings-panel.is-locked textarea[data-setting^="conference."],
+      input[data-setting^="conference."].locked-input,
+      textarea[data-setting^="conference."].locked-input {
+        background: #f3f6fa;
+        color: #475569;
+        border-color: #d9e3f0;
+        cursor: not-allowed;
+      }
+      .conference-settings-panel.is-locked label,
+      label:has(input.locked-input),
+      label:has(textarea.locked-input) {
+        color: #64748b;
+      }
+      .meal-picker-box select,
+      #exMealPlanSelect {
+        appearance: auto;
+        -webkit-appearance: menulist;
+        pointer-events: auto;
+        cursor: pointer;
+        position: relative;
+        z-index: 5;
+        background-color: #fff;
+      }
+      .meal-guide-box {
+        margin: 0 0 14px;
+        padding: 11px 12px;
+        border: 1px dashed #b9d8f5;
+        border-radius: 16px;
+        background: #f8fcff;
+        color: #334155;
+        font-weight: 700;
+        line-height: 1.9;
+      }
+      .meal-guide-box strong {
+        color: var(--blue-dark);
+      }
+      @media (max-width: 820px) {
+        body {
+          font-size: 16px;
+          line-height: 1.8;
+        }
+        button,
+        input,
+        select,
+        textarea {
+          font-size: 16px;
+        }
+        .title h1,
+        .title h2 {
+          font-size: 25px;
+          line-height: 1.45;
+        }
+        .title p,
+        .hint {
+          font-size: 14.8px;
+          line-height: 1.9;
+        }
+        .mobile-card {
+          padding: 14px;
+          border-width: 1.5px;
+        }
+        .mobile-title {
+          font-size: 16.5px;
+        }
+        .mobile-label {
+          font-size: 14.5px;
+        }
+        .mobile-value {
+          font-size: 15.5px;
+          line-height: 1.75;
+        }
+        .btn {
+          font-size: 15.5px;
+          min-height: 42px;
+        }
+        .nav button {
+          font-size: 14.5px;
+        }
+      }
+
+
+      /* Requested update v4 - إداري واضح + إعادة تصميم صفحة المصروفات بالكامل */
+      .home-admin-panel {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.95fr) minmax(280px, 1fr);
+        gap: 14px;
+        margin: 16px 0 0;
+      }
+      .home-admin-card,
+      .home-manager-add {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(199, 221, 248, 0.95);
+        border-radius: 24px;
+        background: linear-gradient(135deg, #ffffff 0%, #edf7ff 62%, #f3fffb 100%);
+        box-shadow: 0 12px 30px rgba(15, 47, 95, 0.10);
+        padding: 18px;
+      }
+      .home-admin-card::before {
+        content: "";
+        position: absolute;
+        inset: auto -30px -55px auto;
+        width: 160px;
+        height: 160px;
+        border-radius: 999px;
+        background: rgba(14, 165, 183, 0.13);
+      }
+      .home-admin-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #0b4a86;
+        font-weight: 900;
+        font-size: 15px;
+      }
+      .home-admin-label::before {
+        content: "★";
+        display: inline-grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 12px;
+        background: #e8f5ff;
+        color: var(--cyan);
+      }
+      #homeAdminDisplay {
+        display: block;
+        position: relative;
+        z-index: 1;
+        margin-top: 8px;
+        color: #071d3f;
+        font-size: clamp(28px, 3.2vw, 46px);
+        line-height: 1.25;
+        font-weight: 950;
+        letter-spacing: -0.03em;
+      }
+      .home-admin-card small {
+        position: relative;
+        z-index: 1;
+        display: block;
+        margin-top: 6px;
+        color: #52677f;
+        font-weight: 800;
+      }
+      .home-manager-add {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 12px;
+      }
+
+      .expenses-page .expenses-topbar {
+        margin-bottom: 16px;
+      }
+      .expense-wallet {
+        display: grid;
+        grid-template-columns: minmax(290px, 0.82fr) minmax(0, 1.4fr);
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+      .wallet-main-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 170px;
+        border: 1px solid rgba(11, 47, 95, 0.10);
+        border-radius: 28px;
+        padding: 22px;
+        color: #fff;
+        background:
+          radial-gradient(circle at left bottom, rgba(255,255,255,.22), transparent 16rem),
+          linear-gradient(135deg, #0b2f5f 0%, #164a8b 54%, #0ea5b7 100%);
+        box-shadow: 0 18px 46px rgba(11, 47, 95, 0.20);
+      }
+      .wallet-main-card::after {
+        content: "";
+        position: absolute;
+        left: -42px;
+        bottom: -52px;
+        width: 180px;
+        height: 180px;
+        border-radius: 999px;
+        border: 26px solid rgba(255,255,255,.13);
+      }
+      .wallet-main-card span,
+      .wallet-main-card small {
+        display: block;
+        position: relative;
+        z-index: 1;
+        color: rgba(255,255,255,.84);
+        font-weight: 900;
+      }
+      .wallet-main-card strong {
+        display: block;
+        position: relative;
+        z-index: 1;
+        margin: 8px 0 4px;
+        font-size: clamp(34px, 4.4vw, 58px);
+        line-height: 1.05;
+        font-weight: 950;
+        letter-spacing: -0.04em;
+      }
+      .wallet-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .wallet-metrics article {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #dbe7f4;
+        border-radius: 24px;
+        padding: 16px;
+        background: linear-gradient(180deg, #ffffff, #f6fbff);
+        box-shadow: 0 10px 26px rgba(15, 47, 95, 0.08);
+      }
+      .wallet-metrics article::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 5px;
+        background: linear-gradient(90deg, var(--cyan), var(--blue));
+      }
+      .wallet-metrics span {
+        display: block;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 900;
+      }
+      .wallet-metrics strong {
+        display: block;
+        margin-top: 8px;
+        color: #0b2f5f;
+        font-size: clamp(20px, 2.2vw, 28px);
+        font-weight: 950;
+        line-height: 1.2;
+      }
+      .expense-studio {
+        display: grid;
+        grid-template-columns: minmax(360px, 0.92fr) minmax(0, 1.2fr);
+        gap: 16px;
+        align-items: start;
+      }
+      .expense-form-card,
+      .expense-ledger-panel,
+      .meal-plan-drawer {
+        border: 1px solid rgba(215, 226, 239, 0.95);
+        border-radius: 28px;
+        background: rgba(255,255,255,.94);
+        box-shadow: 0 16px 42px rgba(15, 47, 95, 0.09);
+      }
+      .expense-form-card,
+      .expense-ledger-panel {
+        padding: 18px;
+      }
+      .expense-card-title,
+      .ledger-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .expense-card-title h3,
+      .ledger-head h3 {
+        margin: 0;
+        color: #0b2f5f;
+        font-size: 21px;
+        font-weight: 950;
+      }
+      .expense-card-title p,
+      .ledger-head p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-weight: 700;
+      }
+      .expense-dot {
+        flex: 0 0 auto;
+        width: 48px;
+        height: 48px;
+        border-radius: 18px;
+        background:
+          radial-gradient(circle at 35% 30%, #fff, transparent 28%),
+          linear-gradient(135deg, var(--cyan), var(--blue));
+        box-shadow: 0 12px 26px rgba(14,165,183,.22);
+      }
+      .expense-chip-area,
+      #expenseQuickButtons.expense-chip-area {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+        gap: 8px;
+        margin: 12px 0 14px;
+      }
+      .expense-chip-area button,
+      #expenseQuickButtons.expense-chip-area button,
+      .quick-buttons button {
+        border-radius: 16px;
+        padding: 10px 11px;
+        border: 1px solid #d6e6f7;
+        background: linear-gradient(180deg, #ffffff, #f5f9ff);
+        color: #0b4a86;
+        font-weight: 950;
+        min-height: 44px;
+      }
+      .expense-chip-area button.active,
+      #expenseQuickButtons.expense-chip-area button.active,
+      .quick-buttons button.active {
+        background: linear-gradient(135deg, #0b2f5f, #164a8b);
+        color: #fff;
+        border-color: #164a8b;
+      }
+      .smart-meal-picker {
+        border-style: solid;
+        background:
+          radial-gradient(circle at left bottom, rgba(14,165,183,.08), transparent 10rem),
+          linear-gradient(180deg, #ffffff, #f5fbff);
+      }
+      .expense-form-grid {
+        margin-top: 12px;
+      }
+      .expense-preview-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 14px 0;
+        padding: 14px 16px;
+        border-radius: 20px;
+        border: 1px solid #cfe0f7;
+        background: linear-gradient(135deg, #f4fbff, #eef8ff);
+      }
+      .expense-preview-box span {
+        color: #0b4a86;
+        font-weight: 950;
+      }
+      .expense-preview-box strong {
+        color: #071d3f;
+        font-size: 28px;
+        font-weight: 950;
+        line-height: 1;
+      }
+      .expense-main-actions .btn {
+        min-width: 150px;
+      }
+      .expenses-card-wrap,
+      .meal-plan-wrap {
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+        overflow: visible;
+      }
+      .expenses-card-wrap table {
+        display: none !important;
+      }
+      .expense-ledger-grid,
+      #expensesCards.expense-ledger-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+        gap: 12px;
+      }
+      .expense-item-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 190px;
+        border: 1px solid #dbe7f4;
+        border-radius: 24px;
+        padding: 15px;
+        background: linear-gradient(180deg, #ffffff, #f8fbff);
+        box-shadow: 0 10px 24px rgba(15,47,95,.08);
+      }
+      .expense-item-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 5px;
+        background: linear-gradient(90deg, #0ea5b7, #164a8b);
+      }
+      .expense-item-card.food::before { background: linear-gradient(90deg, #22c55e, #0ea5b7); }
+      .expense-item-card.stay::before { background: linear-gradient(90deg, #60a5fa, #164a8b); }
+      .expense-item-card.warn::before { background: linear-gradient(90deg, #fb923c, #b65f00); }
+      .expense-item-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .expense-item-title strong {
+        display: block;
+        color: #0b2f5f;
+        font-size: 17px;
+        font-weight: 950;
+      }
+      .expense-item-title small {
+        display: block;
+        color: #64748b;
+        font-weight: 800;
+        margin-top: 2px;
+      }
+      .expense-item-amount {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        padding: 8px 11px;
+        background: #eef6ff;
+        color: #0b2f5f;
+        font-size: 20px;
+        font-weight: 950;
+        white-space: nowrap;
+      }
+      .expense-item-desc {
+        min-height: 44px;
+        color: #233044;
+        font-weight: 800;
+        line-height: 1.65;
+        margin: 8px 0 12px;
+      }
+      .expense-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .expense-meta-grid span {
+        display: block;
+        border: 1px solid #e4edf7;
+        border-radius: 14px;
+        padding: 7px 9px;
+        background: #fbfdff;
+        color: #516174;
+        font-weight: 800;
+        font-size: 13px;
+      }
+      .expense-meta-grid b {
+        display: block;
+        color: #0b2f5f;
+        font-size: 14px;
+      }
+      .expense-card-actions .btn {
+        width: 100%;
+      }
+      .meal-plan-drawer {
+        margin-top: 16px;
+        padding: 0;
+        overflow: hidden;
+      }
+      .meal-plan-drawer > summary {
+        cursor: pointer;
+        padding: 16px 18px;
+        color: #0b2f5f;
+        font-weight: 950;
+        list-style: none;
+        background: linear-gradient(180deg, #ffffff, #f5f9ff);
+      }
+      .meal-plan-drawer > summary::-webkit-details-marker {
+        display: none;
+      }
+      .meal-plan-drawer > summary::after {
+        content: "⌄";
+        float: left;
+        font-size: 20px;
+        color: var(--cyan);
+      }
+      .meal-plan-drawer[open] > summary::after {
+        content: "⌃";
+      }
+      .meal-plan-inside {
+        padding: 0 16px 16px;
+      }
+      .meal-tools {
+        margin-bottom: 10px;
+      }
+      @media (max-width: 1180px) {
+        .expense-wallet,
+        .expense-studio,
+        .home-admin-panel {
+          grid-template-columns: 1fr;
+        }
+        .wallet-metrics {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 820px) {
+        body {
+          font-size: 17px;
+        }
+        button,
+        input,
+        select,
+        textarea {
+          font-size: 17px;
+          min-height: 48px;
+        }
+        .home-manager-add {
+          grid-template-columns: 1fr;
+        }
+        #homeAdminDisplay {
+          font-size: 34px;
+        }
+        .wallet-metrics,
+        .expense-meta-grid {
+          grid-template-columns: 1fr;
+        }
+        .expense-form-card,
+        .expense-ledger-panel {
+          padding: 15px;
+          border-radius: 24px;
+        }
+        .expense-ledger-grid,
+        #expensesCards.expense-ledger-grid {
+          grid-template-columns: 1fr;
+        }
+        .expense-chip-area,
+        #expenseQuickButtons.expense-chip-area {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .expense-preview-box strong {
+          font-size: 30px;
+        }
+      }
+
+
+      /* Requested update v5 - حذف الشروح + ألوان خفيفة للخلايا والكروت */
+      .table-wrap tbody tr:nth-child(4n+1) td:first-child,
+      .table-wrap tbody tr:nth-child(4n+2) td:first-child,
+      .table-wrap tbody tr:nth-child(4n+3) td:first-child,
+      .table-wrap tbody tr:nth-child(4n+4) td:first-child {
+        font-weight: 950;
+        text-align: center;
+      }
+      .table-wrap tbody tr:nth-child(4n+1) td:first-child { background: #eaf4ff; color: #0b4a86; }
+      .table-wrap tbody tr:nth-child(4n+2) td:first-child { background: #ecfdf3; color: #14804a; }
+      .table-wrap tbody tr:nth-child(4n+3) td:first-child { background: #fff7ed; color: #b45309; }
+      .table-wrap tbody tr:nth-child(4n+4) td:first-child { background: #f5f0ff; color: #6d28d9; }
+      #membersTable tbody td:nth-child(4),
+      #revenuesTable tbody td:nth-child(5),
+      #expensesTable tbody td:nth-child(9) {
+        background: #ecfdf3;
+        color: #10733f;
+        font-weight: 950;
+      }
+      #membersTable tbody td:nth-child(5) {
+        background: #fff7ed;
+        color: #b45309;
+        font-weight: 950;
+      }
+      #attendanceTable tbody td:nth-child(3) {
+        background: #f4f8ff;
+        border-radius: 12px;
+      }
+      .kpi-grid .kpi:nth-child(5n+1),
+      .wallet-metrics article:nth-child(4n+1) {
+        background: linear-gradient(180deg, #ffffff, #eef7ff);
+      }
+      .kpi-grid .kpi:nth-child(5n+2),
+      .wallet-metrics article:nth-child(4n+2) {
+        background: linear-gradient(180deg, #ffffff, #eefcf4);
+      }
+      .kpi-grid .kpi:nth-child(5n+3),
+      .wallet-metrics article:nth-child(4n+3) {
+        background: linear-gradient(180deg, #ffffff, #fff7ed);
+      }
+      .kpi-grid .kpi:nth-child(5n+4),
+      .wallet-metrics article:nth-child(4n+4) {
+        background: linear-gradient(180deg, #ffffff, #f6f1ff);
+      }
+      .manager-card:nth-child(4n+1),
+      .committee-card:nth-child(4n+1),
+      .report-card:nth-child(4n+1),
+      .backup-card:nth-child(4n+1) {
+        background: linear-gradient(180deg, #ffffff, #f1f8ff);
+      }
+      .manager-card:nth-child(4n+2),
+      .committee-card:nth-child(4n+2),
+      .report-card:nth-child(4n+2),
+      .backup-card:nth-child(4n+2) {
+        background: linear-gradient(180deg, #ffffff, #f0fdf5);
+      }
+      .manager-card:nth-child(4n+3),
+      .committee-card:nth-child(4n+3),
+      .report-card:nth-child(4n+3),
+      .backup-card:nth-child(4n+3) {
+        background: linear-gradient(180deg, #ffffff, #fff8ed);
+      }
+      .manager-card:nth-child(4n+4),
+      .committee-card:nth-child(4n+4),
+      .report-card:nth-child(4n+4),
+      .backup-card:nth-child(4n+4) {
+        background: linear-gradient(180deg, #ffffff, #f8f3ff);
+      }
+      .expense-item-card:nth-child(4n+1) { background: linear-gradient(180deg, #ffffff, #f1f8ff); }
+      .expense-item-card:nth-child(4n+2) { background: linear-gradient(180deg, #ffffff, #f0fdf5); }
+      .expense-item-card:nth-child(4n+3) { background: linear-gradient(180deg, #ffffff, #fff8ed); }
+      .expense-item-card:nth-child(4n+4) { background: linear-gradient(180deg, #ffffff, #f8f3ff); }
+      .mobile-card:nth-child(4n+1) { background: linear-gradient(180deg, #ffffff, #eef7ff); }
+      .mobile-card:nth-child(4n+2) { background: linear-gradient(180deg, #ffffff, #f0fdf5); }
+      .mobile-card:nth-child(4n+3) { background: linear-gradient(180deg, #ffffff, #fff8ed); }
+      .mobile-card:nth-child(4n+4) { background: linear-gradient(180deg, #ffffff, #f8f3ff); }
+
+
+    
+      /* Focused update v6 */
+      :root { --royal: #0b3d91; --royal-dark: #062b68; --royal-soft: #eaf2ff; }
+      .btn:not(.danger), .btn.soft, .btn.green, .scope-btn {
+        background: linear-gradient(180deg, var(--royal), var(--royal-dark)) !important;
+        border-color: var(--royal) !important;
+        color: #fff !important;
+      }
+      .btn:not(.danger):hover, .scope-btn:hover { filter: brightness(1.05); }
+      .btn.danger { background: #b42318 !important; border-color: #b42318 !important; color: #fff !important; }
+      .manager-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .home-admin-card strong { font-size: clamp(30px, 5vw, 56px); letter-spacing: .2px; line-height: 1.15; }
+      .home-admin-card small { display: none; }
+      .manager-card, .committee-card { position: relative; overflow: hidden; }
+      .manager-card:before, .committee-card:before { content:""; position:absolute; inset-inline-start:0; top:0; width:7px; height:100%; background: linear-gradient(180deg,#0b3d91,#0aa6b7); }
+      .manager-card h3, .committee-card h3 { font-size: 20px; }
+      .card-display-line { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #dbe7f4; }
+      .card-display-line span { color: var(--muted); font-weight: 800; }
+      .card-display-line strong { color: var(--blue-dark); }
+      .modal-tag-list { min-height: 44px; padding: 10px; border: 1px dashed #c7d8ee; border-radius: 16px; background: #f8fbff; }
+      .expenses-page .hidden-field { display: none !important; }
+      .expense-studio-v6 { grid-template-columns: minmax(360px, .85fr) minmax(0, 1.15fr); }
+      .meal-fixed-panel, .other-expenses-panel { border: 1px solid #d7e8ff; border-radius: 20px; padding: 13px; margin-bottom: 13px; background: linear-gradient(180deg,#ffffff,#f4f9ff); }
+      .mini-section-title { color: var(--royal-dark); font-weight: 950; margin-bottom: 10px; font-size: 16px; }
+      .meal-fast-grid { align-items: end; }
+      .expense-chip-area { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+      .expense-chip-area button { border: 0; border-radius: 999px; padding: 10px 14px; background: #eaf2ff; color: var(--royal); font-weight: 900; }
+      .expense-chip-area button.active { background: linear-gradient(180deg,var(--royal),var(--royal-dark)); color:#fff; }
+      .expense-scope-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #d5e3f4; }
+      .expense-scope-row span { font-weight: 900; color: var(--blue-dark); margin-left: 4px; }
+      .scope-btn { border: 1px solid #c9ddf8; border-radius: 999px; padding: 8px 15px; font-weight: 900; opacity: .75; }
+      .scope-btn.active { opacity: 1; box-shadow: 0 7px 18px rgba(11,61,145,.20); }
+      #exMemberWrap:not(.hidden-field) { display: block !important; }
+      .revenue-entry-grid { grid-template-columns: repeat(6, minmax(120px, 1fr)); gap: 12px; }
+      .committee-entry-grid { grid-template-columns: minmax(170px, 1fr) minmax(170px, 1fr) 140px 140px; gap: 12px; align-items: end; }
+      .form-action-label { align-self: end; }
+      .form-action-label .btn { height: 43px; }
+      @media(max-width: 980px) { .expense-studio-v6 { grid-template-columns: 1fr; } .revenue-entry-grid, .committee-entry-grid { grid-template-columns: 1fr 1fr; } }
+      @media(max-width: 560px) { .manager-action-row, .revenue-entry-grid, .committee-entry-grid { grid-template-columns: 1fr; } .home-admin-card strong { font-size: 34px; } .expense-form-card input, .expense-form-card select, .expense-form-card textarea { font-size: 17px; } }
+
+    
+
+      /* v7 focused polish: meal buttons, royal selected state, no decorative circles */
+      :root { --royal:#0b3d91; --royal-dark:#062b68; }
+      .hero:after,
+      body::before,
+      .kpi::before,
+      .kpi::after,
+      .wallet-main-card::after,
+      .wallet-metrics article::before,
+      .expense-dot,
+      .section-title::before { display:none !important; }
+      .expense-card-title { padding-inline-start:0 !important; }
+      .meal-buttons-panel {
+        border:1px solid #cfe0f7 !important;
+        background:linear-gradient(180deg,#ffffff,#f7fbff) !important;
+      }
+      .meal-button-grid {
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:10px;
+        margin-top:10px;
+      }
+      .meal-choice-btn {
+        border:1px solid #c7dcf6;
+        background:#fff;
+        color:#123b7a;
+        border-radius:16px;
+        padding:11px 12px;
+        text-align:right;
+        font-weight:900;
+        box-shadow:0 8px 18px rgba(18,59,122,.07);
+        min-height:92px;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        gap:5px;
+      }
+      .meal-choice-btn span { font-size:12px; color:#59708f; }
+      .meal-choice-btn strong { font-size:14px; line-height:1.45; color:#0b2f6d; }
+      .meal-choice-btn small { font-size:12px; color:#6b7a90; line-height:1.45; }
+      .meal-choice-btn:hover,
+      .meal-choice-btn.active,
+      .expense-chip-area button.active,
+      .quick-buttons button.active,
+      .scope-btn.active,
+      .tab.active,
+      .btn.active,
+      .nav button.active {
+        background:linear-gradient(180deg,var(--royal),var(--royal-dark)) !important;
+        border-color:var(--royal) !important;
+        color:#fff !important;
+      }
+      .meal-choice-btn.active span,
+      .meal-choice-btn.active strong,
+      .meal-choice-btn.active small,
+      .expense-chip-area button.active,
+      .scope-btn.active { color:#fff !important; }
+      .expense-section-divider {
+        display:flex;
+        align-items:center;
+        gap:12px;
+        margin:14px 0;
+        color:#0b3d91;
+        font-weight:900;
+      }
+      .expense-section-divider::before,
+      .expense-section-divider::after {
+        content:"";
+        height:1px;
+        background:#cfe0f7;
+        flex:1;
+      }
+      .expense-section-divider span {
+        background:#eef6ff;
+        border:1px solid #cfe0f7;
+        border-radius:999px;
+        padding:7px 14px;
+      }
+      .expense-scope-row .scope-btn { min-width:100px; }
+      .manager-card .btn[data-open-manager],
+      .committee-card .btn[data-open-committee] { display:none !important; }
+      @media(max-width:900px){ .meal-button-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+      @media(max-width:560px){
+        .meal-button-grid{grid-template-columns:1fr;}
+        .meal-choice-btn{min-height:auto;font-size:16px;}
+      }
+
+
+      /* v8 focused improvements */
+      .home-admin-card {
+        background: linear-gradient(135deg,#f3f8ff 0%,#eaf3ff 55%,#ffffff 100%) !important;
+        border-color:#bcd3f2 !important;
+      }
+      .home-admin-card::before,
+      .home-admin-label::before { display:none !important; }
+      .home-admin-label {
+        color:#0b3d91 !important;
+        font-size:17px !important;
+      }
+      .meal-title-row {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+      }
+      .meal-title-row .mini-section-title { margin-bottom:0; }
+      .meal-add-mini {
+        min-height:34px !important;
+        padding:7px 11px !important;
+        border-radius:999px !important;
+        font-size:13px !important;
+      }
+      .meal-button-grid { align-items:stretch; }
+      .meal-choice-card {
+        position:relative;
+        display:flex;
+        flex-direction:column;
+        gap:7px;
+      }
+      .meal-choice-card .meal-choice-btn { width:100%; height:100%; }
+      .meal-choice-card.registered .meal-choice-btn {
+        background:#d9eaff !important;
+        border-color:#80aee9 !important;
+        box-shadow:0 10px 24px rgba(11,61,145,.15) !important;
+      }
+      .meal-choice-card.registered .meal-choice-btn span,
+      .meal-choice-card.registered .meal-choice-btn strong,
+      .meal-choice-card.registered .meal-choice-btn small { color:#08306f !important; }
+      .meal-choice-card.active .meal-choice-btn,
+      .meal-choice-btn.active {
+        background:linear-gradient(180deg,var(--royal),var(--royal-dark)) !important;
+        border-color:var(--royal) !important;
+        color:#fff !important;
+      }
+      .meal-choice-card.active .meal-choice-btn span,
+      .meal-choice-card.active .meal-choice-btn strong,
+      .meal-choice-card.active .meal-choice-btn small { color:#fff !important; }
+      .meal-card-actions {
+        display:flex;
+        justify-content:flex-end;
+      }
+      .meal-delete-mini {
+        border:1px solid #ffd2d2;
+        background:#fff4f4;
+        color:#b42318;
+        border-radius:999px;
+        padding:5px 10px;
+        font-size:12px;
+        font-weight:900;
+      }
+      .meal-delete-mini:hover { background:#b42318; color:#fff; }
+      .expense-section-divider { margin:18px 0 !important; }
+      .scope-btn.active,
+      .expense-chip-area button.active,
+      .quick-buttons button.active,
+      .tab.active,
+      .nav button.active {
+        background:linear-gradient(180deg,var(--royal),var(--royal-dark)) !important;
+        color:#fff !important;
+        border-color:var(--royal) !important;
+      }
+      @media(max-width:560px){
+        .meal-title-row{align-items:stretch;}
+        .meal-add-mini{width:100%;}
+      }
+
+
+      /* v9 settings + reports requested polish */
+      #settings .panel label {
+        background: linear-gradient(135deg,#0b3d91 0%,#114ea6 100%);
+        color:#ffffff !important;
+        border:1px solid #0b3d91;
+        border-radius:17px;
+        padding:12px 13px;
+        font-size:16px;
+        font-weight:900;
+        box-shadow:0 10px 24px rgba(11,61,145,.14);
+      }
+      #settings .panel label input,
+      #settings .panel label textarea {
+        margin-top:7px;
+        background:#ffffff !important;
+        color:#0b3d91 !important;
+        border-color:#b8d0f3 !important;
+        font-size:16px;
+        font-weight:900;
+      }
+      #settings .panel label input::placeholder,
+      #settings .panel label textarea::placeholder {
+        color:#7b91b2;
+      }
+      #settings .section-title {
+        color:#0b3d91;
+        font-size:21px;
+        font-weight:900;
+      }
+      #settings .section-head-row .btn {
+        background:linear-gradient(180deg,var(--royal),var(--royal-dark)) !important;
+        color:#fff !important;
+        border-color:var(--royal) !important;
+      }
+      .activity-top-card h3 {
+        display:flex;
+        justify-content:space-between;
+        gap:8px;
+        align-items:center;
+      }
+      .activity-top-card h3::after {
+        content:'Top 10';
+        font-size:12px;
+        color:#0b3d91;
+        background:#eaf3ff;
+        border:1px solid #cfe0f7;
+        border-radius:999px;
+        padding:4px 9px;
+      }
+
+
+
+      /* v10 correction: settings royal color applies to buttons, not field frames */
+      #settings .panel label {
+        background:#ffffff !important;
+        color:#334155 !important;
+        border:0 !important;
+        border-radius:0 !important;
+        padding:0 !important;
+        font-size:15px !important;
+        font-weight:900 !important;
+        box-shadow:none !important;
+      }
+      #settings .panel label input,
+      #settings .panel label textarea {
+        margin-top:7px;
+        background:#ffffff !important;
+        color:#172033 !important;
+        border:1px solid var(--line) !important;
+        font-size:15px !important;
+        font-weight:800 !important;
+      }
+      #settings .section-head-row .btn,
+      #settings .btn,
+      #conferenceEditBtn {
+        background:linear-gradient(180deg,#0b3d91,#062b68) !important;
+        color:#ffffff !important;
+        border-color:#0b3d91 !important;
+        font-size:15px !important;
+        font-weight:950 !important;
+        box-shadow:0 10px 22px rgba(11,61,145,.20) !important;
+      }
+      #settings .section-head-row .btn:hover,
+      #settings .btn:hover,
+      #conferenceEditBtn:hover {
+        filter:brightness(1.04);
+        transform:translateY(-1px);
+      }
+
+
+    /* Attendance edit modal refinement v11 */
+    #arrivalModal .modal-card{border-top:5px solid var(--blue);}
+    #arrivalModal .modal-actions .btn{min-width:130px;}
+    @media(max-width:620px){#arrivalModal .modal-actions .btn{width:100%;}}
+
+  </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-logo">✦</span>
+          <div>
+            <strong>إدارة المؤتمر</strong><small>واجهة منسقة + بطاقات</small>
+          </div>
+        </div>
+        <nav class="nav" id="mainNav">
+          <button class="active" data-page="dashboard">الرئيسية</button>
+          <button data-page="members">الأعضاء</button>
+          <button data-page="expenses">المصروفات</button>
+          <button data-page="revenues">إيرادات أخرى</button>
+          <button data-page="committees">اللجان</button>
+          <button data-page="attendance">الالتزام</button>
+          <button data-page="reports">التقارير</button>
+          <button data-page="settings">الإعدادات</button>
+          <button data-page="backup">نسخ احتياطي</button>
+        </nav>
+        <div class="sidebar-save">
+          <button class="btn soft full" id="saveNowBtn">حفظ الآن</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section id="dashboard" class="page active">
+          <div class="topbar">
+            <div class="title">
+              <h1>الرئيسية</h1>
+            </div>
+          </div>
+          <div class="hero">
+            <div class="hero-inner">
+              <div class="hero-row">
+                <div>
+                  <div class="conference-word">مؤتمر</div>
+                  <h1 id="heroName">—</h1>
+                </div>
+                <span class="chip" id="heroPlace">—</span>
+              </div>
+              <div class="date-grid">
+                <div class="date-tile">
+                  <span>تاريخ الذهاب</span><strong id="heroStart">—</strong>
+                </div>
+                <div class="date-tile">
+                  <span>تاريخ الرجوع</span><strong id="heroEnd">—</strong>
+                </div>
+              </div>
+              <div class="home-admin-panel">
+                <div class="home-admin-card">
+                  <span class="home-admin-label">إداري المؤتمر</span>
+                  <strong id="homeAdminDisplay">—</strong>
+                  <small>المسؤول الإداري العام عن متابعة المؤتمر</small>
+                </div>
+                <div class="home-manager-add">
+                  <label>إضافة مسؤول متابعة جديد<input id="newManagerName" placeholder="اسم المسؤول" /></label>
+                  <div class="manager-action-row">
+                    <button class="btn primary" id="addManagerBtn">إضافة مسؤول</button>
+                    <button class="btn soft" id="openManagerEditorBtn" type="button">تعديل مسؤول</button>
+                  </div>
+                </div>
+              </div>
+              <div class="manager-grid" id="managerGrid"></div>
+            </div>
+          </div>
+          <div class="kpi-grid" id="kpiGrid"></div>
+        </section>
+
+        <section id="settings" class="page">
+          <div class="topbar">
+            <div class="title">
+              <h2>الإعدادات</h2>
+            </div>
+          </div>
+          <div class="panel conference-settings-panel" id="conferenceSettingsPanel">
+            <div class="section-head-row">
+              <h3 class="section-title">بيانات المؤتمر</h3>
+              <button class="btn soft small" id="conferenceEditBtn" type="button">
+                تعديل البيانات
+              </button>
+            </div>
+            <div class="grid three">
+              <label
+                >اسم المؤتمر<input
+                  id="confName"
+                  data-setting="conference.name" /></label
+              ><label
+                >مكان المؤتمر<input
+                  id="confPlace"
+                  data-setting="conference.place" /></label
+              ><label
+                >إداري المؤتمر<input
+                  id="confAdmin"
+                  data-setting="conference.admin" /></label
+              ><label
+                >تاريخ الذهاب<input
+                  id="confStart"
+                  type="date"
+                  data-setting="conference.startDate" /></label
+              ><label
+                >تاريخ الرجوع<input
+                  id="confEnd"
+                  type="date"
+                  data-setting="conference.endDate" /></label
+              ><label
+                >قيمة اشتراك الفرد<input
+                  id="confFee"
+                  inputmode="decimal"
+                  data-setting="conference.fee"
+              /></label>
+            </div>
+            <label
+              >ملاحظات<textarea
+                id="confNotes"
+                rows="3"
+                data-setting="conference.notes"
+              ></textarea>
+            </label>
+          </div>
+          <div class="panel">
+            <h3 class="section-title">ثوابت المصروفات والحماية</h3>
+            <div class="grid five">
+              <label
+                >ساعة القاعة<input
+                  id="hallRate"
+                  inputmode="decimal"
+                  data-setting="settings.hallRate" /></label
+              ><label
+                >حمام السباحة<input
+                  id="poolRate"
+                  inputmode="decimal"
+                  data-setting="settings.poolRate" /></label
+              ><label
+                >ساعة/بند المطبخ<input
+                  id="kitchenRate"
+                  inputmode="decimal"
+                  data-setting="settings.kitchenRate" /></label
+              ><label
+                >عدد ليالي الإقامة<input
+                  id="stayNights"
+                  inputmode="decimal"
+                  data-setting="settings.stayNights" /></label
+              ><label
+                >كلمة سر تعديل الوصول<input
+                  id="adminPassword"
+                  type="password"
+                  data-setting="settings.adminPassword"
+              /></label>
+            </div>
+          </div>
+        </section>
+
+        <section id="members" class="page">
+          <div class="topbar">
+            <div class="title">
+              <h2>أعضاء المؤتمر</h2>
+            </div>
+            <div class="actions">
+              <button class="btn soft" id="openImportBtn">استيراد أسماء</button
+              ><button class="btn soft" id="exportMembersBtn">
+                تصدير Excel
+              </button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="grid five">
+              <label>الاسم<input id="mName" /></label
+              ><label>التليفون<input id="mPhone" inputmode="numeric" /></label
+              ><label>مدفوع<input id="mPaid" inputmode="decimal" /></label
+              ><label>ملاحظات<input id="mNotes" /></label
+              ><label
+                >&nbsp;<button
+                  class="btn primary full"
+                  id="quickAddMemberBtn"
+                  type="button"
+                >
+                  إضافة
+                </button></label
+              >
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-tools">
+              <input
+                id="memberSearch"
+                class="search"
+                placeholder="بحث بالاسم أو التليفون"
+              /><select id="paymentFilter">
+                <option value="all">كل الأعضاء</option>
+                <option value="paid">دفع كامل</option>
+                <option value="partial">دفع جزء</option>
+                <option value="unpaid">لم يدفع</option>
+              </select>
+              <div class="money-totals">
+                <div class="mini-total">
+                  <span>إجمالي المدفوع</span
+                  ><strong id="membersPaidTotal">0 ج</strong>
+                </div>
+                <div class="mini-total">
+                  <span>إجمالي الباقي</span
+                  ><strong id="membersRemainingTotal">0 ج</strong>
+                </div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="membersTable"></table>
+              <div id="membersCards" class="mobile-cards"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="expenses" class="page expenses-page">
+          <div class="topbar expenses-topbar">
+            <div class="title">
+              <h2>المصروفات</h2>
+            </div>
+            <div class="actions">
+              <button class="btn soft" id="exportExpensesBtn">تصدير Excel</button>
+            </div>
+          </div>
+
+          <div class="expense-wallet">
+            <div class="wallet-main-card">
+              <span>محفظة المؤتمر</span>
+              <strong id="expenseGrandTotal">0 ج</strong>
+            </div>
+            <div class="wallet-metrics">
+              <article><span>تكلفة الفرد</span><strong id="expenseCostPerMember">0 ج</strong></article>
+              <article><span>عدد الأعضاء</span><strong id="expenseMemberCount">0</strong></article>
+              <article><span>الرصيد الحالي</span><strong id="expenseBalanceMini">0 ج</strong></article>
+              <article><span>مصروفات الوجبات</span><strong id="expenseMealsTotal">0 ج</strong></article>
+            </div>
+          </div>
+
+          <div class="expense-studio expense-studio-v6">
+            <div class="expense-form-card expense-form-v6">
+              <div class="expense-card-title">
+                <span class="expense-dot"></span>
+                <div>
+                  <h3>تسجيل مصروف</h3>
+                </div>
+              </div>
+
+              <div class="meal-fixed-panel meal-buttons-panel">
+                <div class="meal-title-row">
+                  <div class="mini-section-title">مصروفات الوجبات الثابتة</div>
+                  <button class="btn soft small meal-add-mini" id="addMealFromButtonsBtn" type="button">+ إضافة وجبة</button>
+                </div>
+                <div class="meal-button-grid" id="mealChoiceButtons"></div>
+                <div class="grid two meal-fast-grid meal-price-row">
+                  <label>سعر الفرد في الوجبة<input id="exUnitPrice" inputmode="decimal" placeholder="مثال: 80" /></label>
+                </div>
+              </div>
+
+              <div class="expense-section-divider"><span>المصروفات الأساسية</span></div>
+
+              <div class="other-expenses-panel">
+                <div class="mini-section-title">باقي المصروفات</div>
+                <div class="expense-chip-area" id="expenseQuickButtons"></div>
+                <div class="expense-scope-row" id="expenseScopeBox">
+                  <span>طريقة التسجيل</span>
+                  <button class="scope-btn active" type="button" data-exp-scope="group">المؤتمر كله</button>
+                  <button class="scope-btn" type="button" data-exp-scope="individual">فردي</button>
+                </div>
+              </div>
+
+              <div class="grid two expense-form-grid">
+                <label>التاريخ<input id="exDate" type="date" /></label>
+                <label class="hidden-field">البند<select id="exCategory"></select></label>
+                <label id="exMemberWrap" class="hidden-field">اسم الشخص<select id="exMember"></select></label>
+                <label class="hidden-field">نوع الوجبة<select id="exMealType"><option>فطار</option><option>غداء</option><option>عشاء</option><option>أخرى</option></select></label>
+                <label>العدد<input id="exCount" inputmode="decimal" placeholder="مثال: 100" /></label>
+                <label>عدد/ساعات/ليالي<input id="exUnits" inputmode="decimal" value="1" /></label>
+                <label>مبلغ نهائي اختياري<input id="exManualAmount" inputmode="decimal" placeholder="لو عايز تكتب الإجمالي مباشرة" /></label>
+              </div>
+
+              <label>البيان<input id="exDesc" data-autosubmit="expense" placeholder="اكتب البيان ثم اضغط Enter أو انتقل من الخانة للحفظ" /></label>
+              <label>ملاحظات<textarea id="exNotes" rows="2"></textarea></label>
+
+              <div class="expense-preview-box">
+                <span>المبلغ المتوقع</span>
+                <strong id="exPreview">0 ج</strong>
+              </div>
+              <div class="actions expense-main-actions">
+                <button class="btn primary" id="addExpenseBtn">إضافة المصروف</button>
+                <button class="btn soft" id="resetExpenseBtn">تفريغ</button>
+              </div>
+            </div>
+
+            <div class="expense-ledger-panel">
+              <div class="ledger-head">
+                <div>
+                  <h3>دفتر المصروفات</h3>
+                </div>
+              </div>
+              <div class="table-wrap expenses-card-wrap">
+                <table id="expensesTable"></table>
+                <div id="expensesCards" class="mobile-cards expense-ledger-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <details class="meal-plan-drawer">
+            <summary>إعداد قائمة الوجبات</summary>
+            <div class="meal-plan-inside">
+              <div class="table-tools meal-tools">
+                <div><strong>الوجبات الأساسية</strong></div>
+                <div class="actions">
+                  <button class="btn soft" id="addMealRowBtn">إضافة وجبة</button>
+                  <button class="btn primary" id="addPricedMealsBtn">ترحيل الوجبات المسعّرة</button>
+                </div>
+              </div>
+              <div class="table-wrap meal-plan-wrap">
+                <table id="mealPlanTable"></table>
+                <div id="mealCards" class="mobile-cards"></div>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <section id="revenues" class="page">
+          <div class="topbar">
+            <div class="title">
+              <h2>إيرادات أخرى</h2>
+            </div>
+            <div class="actions">
+              <button class="btn soft" id="exportRevenuesBtn">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="grid revenue-entry-grid">
+              <label>التاريخ<input id="rDate" type="date" /></label
+              ><label
+                >النوع<select id="rType">
+                  <option>تبرع</option>
+                  <option>دعم من الخدمة</option>
+                  <option>دعم من خادم</option>
+                  <option>أخرى</option>
+                </select></label
+              ><label>المصدر<input id="rSource" /></label
+              ><label>المبلغ<input id="rAmount" inputmode="decimal" /></label
+              ><label>ملاحظات<input id="rNotes" /></label>
+              <label class="form-action-label">&nbsp;<button class="btn primary full" id="addRevenueBtn" type="button">إضافة إيراد</button></label>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="table-tools">
+              <strong
+                >إجمالي الإيرادات الأخرى:
+                <span id="revenueTotal">0 ج</span></strong
+              >
+            </div>
+            <div class="table-wrap">
+              <table id="revenuesTable"></table>
+              <div id="revenuesCards" class="mobile-cards"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="committees" class="page">
+          <div class="topbar">
+            <div class="title">
+              <h2>اللجان والمهام</h2>
+            </div>
+            <div class="actions">
+              <button class="btn soft" id="exportCommitteesBtn">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="grid committee-entry-grid">
+              <label>اسم اللجنة<input id="committeeName" /></label>
+              <label>المسؤول<input id="committeeLeader" /></label>
+              <label class="form-action-label">&nbsp;<button class="btn primary full" id="quickAddCommitteeBtn" type="button">إضافة</button></label>
+              <label class="form-action-label">&nbsp;<button class="btn soft full" id="openCommitteeEditorBtn" type="button">تعديل لجنة</button></label>
+            </div>
+          </div>
+          <div id="committeeGrid" class="committee-grid"></div>
+        </section>
+
+        <section id="attendance" class="page">
+          <div class="topbar">
+            <div class="title">
+              <h2>الالتزام</h2>
+            </div>
+            <div class="actions">
+              <button class="btn primary" id="addActivityBtn">إضافة نشاط</button
+              ><button class="btn danger" id="deleteActivityBtn">
+                حذف النشاط</button
+              ><button class="btn soft" id="exportAttendanceBtn">
+                تصدير Excel
+              </button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="grid three">
+              <label>النشاط الحالي<select id="activitySelect"></select></label
+              ><label>إضافة نشاط جديد<input id="activityName" /></label
+              ><label
+                >بحث<input id="attendanceSearch" placeholder="بحث بالاسم"
+              /></label>
+            </div>
+          </div>
+          <div id="attendanceStats" class="stat-grid"></div>
+          <div class="panel">
+            <div class="table-wrap">
+              <table id="attendanceTable"></table>
+              <div id="attendanceCards" class="mobile-cards"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="reports" class="page">
+          <div class="topbar">
+            <div class="title">
+              <h2>التقارير</h2>
+            </div>
+            <div class="actions">
+              <button class="btn primary" id="exportReportBtn">
+                تصدير التقرير Excel</button
+              ><button class="btn soft" onclick="window.print()">طباعة</button>
+            </div>
+          </div>
+          <div id="reportContent"></div>
+        </section>
+
+        <section id="backup" class="page">
+          <div class="topbar">
+            <div class="title">
+              <h2>النسخ الاحتياطي</h2>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="backup-grid">
+              <button class="backup-card" id="exportBackupBtn">
+                <strong>تصدير نسخة احتياطية</strong
+                ><span>ملف JSON كامل</span></button
+              ><label class="backup-card"
+                ><strong>استيراد نسخة احتياطية</strong
+                ><span>استعادة ملف JSON</span
+                ><input
+                  id="importBackupFile"
+                  type="file"
+                  accept="application/json"
+                  hidden /></label
+              ><button class="backup-card" id="exportAllBtn">
+                <strong>تصدير كل الكشوف</strong><span>ملف Excel شامل</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="importModal" class="modal">
+      <div class="modal-card">
+        <h2>استيراد أسماء الأعضاء</h2>
+        <textarea
+          id="importText"
+          rows="10"
+          placeholder="مينا سمير&#9;01000000000&#9;500&#9;ملاحظة"
+        ></textarea>
+        <div class="modal-actions">
+          <label class="btn soft"
+            >اختيار CSV/TXT<input
+              id="importFile"
+              type="file"
+              accept=".csv,.txt"
+              hidden /></label
+          ><button class="btn primary" id="confirmImportBtn">
+            استيراد الآن</button
+          ><button class="btn" data-close>إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <div id="memberModal" class="modal">
+      <div class="modal-card" style="width: min(560px, 100%)">
+        <h2>تعديل العضو</h2>
+        <input id="editMemberId" type="hidden" />
+        <div class="grid two">
+          <label>الاسم<input id="editMemberName" /></label
+          ><label>التليفون<input id="editMemberPhone" /></label
+          ><label>مدفوع<input id="editMemberPaid" inputmode="decimal" /></label
+          ><label>ملاحظات<input id="editMemberNotes" /></label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn primary" id="saveMemberEditBtn">حفظ</button
+          ><button class="btn green" id="payFullMemberBtn">سداد كامل</button
+          ><button class="btn danger" id="deleteMemberBtn">حذف</button
+          ><button class="btn" data-close>إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <div id="expenseModal" class="modal">
+      <div class="modal-card">
+        <h2>تعديل بند المصروف</h2>
+        <input id="editExpenseId" type="hidden" />
+        <div class="grid three">
+          <label>التاريخ<input id="editExDate" type="date" /></label
+          ><label>البند<select id="editExCategory"></select></label
+          ><label>اسم الشخص<select id="editExMember"></select></label
+          ><label
+            >نوع الوجبة<select id="editExMealType">
+              <option>فطار</option>
+              <option>غداء</option>
+              <option>عشاء</option>
+              <option>أخرى</option>
+            </select></label
+          ><label
+            >عدد الأفراد<input id="editExCount" inputmode="decimal" /></label
+          ><label
+            >عدد/ساعات/ليالي<input
+              id="editExUnits"
+              inputmode="decimal" /></label
+          ><label
+            >سعر الوحدة<input id="editExUnitPrice" inputmode="decimal" /></label
+          ><label
+            >المبلغ النهائي<input id="editExAmount" inputmode="decimal"
+          /></label>
+        </div>
+        <label>البيان<input id="editExDesc" /></label
+        ><label>ملاحظات<textarea id="editExNotes" rows="2"></textarea></label>
+        <div class="modal-actions">
+          <button class="btn primary" id="saveExpenseEditBtn">حفظ</button
+          ><button class="btn danger" id="deleteExpenseEditBtn">حذف</button
+          ><button class="btn" data-close>إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <div id="revenueModal" class="modal">
+      <div class="modal-card" style="width: min(620px, 100%)">
+        <h2>تعديل الإيراد</h2>
+        <input id="editRevenueId" type="hidden" />
+        <div class="grid two">
+          <label>التاريخ<input id="editRDate" type="date" /></label
+          ><label
+            >النوع<select id="editRType">
+              <option>تبرع</option>
+              <option>دعم من الخدمة</option>
+              <option>دعم من خادم</option>
+              <option>أخرى</option>
+            </select></label
+          ><label>المصدر<input id="editRSource" /></label
+          ><label>المبلغ<input id="editRAmount" inputmode="decimal" /></label>
+        </div>
+        <label>ملاحظات<input id="editRNotes" /></label>
+        <div class="modal-actions">
+          <button class="btn primary" id="saveRevenueEditBtn">حفظ</button
+          ><button class="btn danger" id="deleteRevenueEditBtn">حذف</button
+          ><button class="btn" data-close>إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <div id="managerEditorModal" class="modal">
+      <div class="modal-card" style="width: min(720px, 100%)">
+        <h2>تعديل مسؤول متابعة</h2>
+        <div class="grid two">
+          <label>اختيار المسؤول<select id="managerEditSelect"></select></label>
+          <label>اسم المسؤول<input id="managerEditName" /></label>
+        </div>
+        <div class="grid two">
+          <label>إضافة لجنة للمسؤول<select id="managerEditCommitteeSelect"></select></label>
+          <label class="form-action-label">&nbsp;<button class="btn primary full" id="managerEditAssignBtn" type="button">إضافة اللجنة</button></label>
+        </div>
+        <div class="tag-list modal-tag-list" id="managerEditTags"></div>
+        <div class="modal-actions">
+          <button class="btn primary" id="saveManagerEditBtn">حفظ</button>
+          <button class="btn danger" id="deleteManagerEditBtn">حذف المسؤول</button>
+          <button class="btn" data-close>إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <div id="committeeEditorModal" class="modal">
+      <div class="modal-card" style="width: min(720px, 100%)">
+        <h2>تعديل لجنة</h2>
+        <div class="grid two">
+          <label>اختيار اللجنة<select id="committeeEditSelect"></select></label>
+          <label>اسم اللجنة<input id="committeeEditName" /></label>
+          <label>المسؤول<input id="committeeEditLeader" /></label>
+        </div>
+        <label>المهام<textarea id="committeeEditTasks" rows="4"></textarea></label>
+        <div class="modal-actions">
+          <button class="btn primary" id="saveCommitteeEditBtn">حفظ</button>
+          <button class="btn danger" id="deleteCommitteeEditBtn">حذف اللجنة</button>
+          <button class="btn" data-close>إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <div id="arrivalModal" class="modal">
+      <div class="modal-card" style="width: min(560px, 100%)">
+        <h2>تعديل الالتزام ووقت الوصول</h2>
+        <input id="arrivalMemberId" type="hidden" />
+        <div id="arrivalInfo" class="hint"></div>
+        <div class="grid two">
+          <label
+            >كلمة السر الإدارية<input
+              id="arrivalPassword"
+              type="password"
+              placeholder="كلمة السر من الإعدادات" /></label
+          ><label
+            >وقت الوصول<input id="arrivalTime" type="datetime-local"
+          /></label>
+        </div>
+        <p class="hint" style="margin-top:10px">أي تعديل هنا يحتاج كلمة السر الإدارية. استخدم «إلغاء التسجيل» لو تم الضغط على وصل الآن بالخطأ.</p>
+        <div class="modal-actions">
+          <button class="btn primary" id="saveArrivalBtn">حفظ التعديل</button
+          ><button class="btn soft" id="removeArrivalBtn">مسح وقت الوصول فقط</button
+          ><button class="btn danger" id="clearAttendanceBtn">إلغاء التسجيل</button
+          ><button class="btn" data-close>إلغاء</button>
+        </div>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
+    <div id="cloudSyncStatus" class="cloud-sync-status offline">غير متصل</div>
+
+    <script>
+      (function () {
+        "use strict";
+        const STORAGE_KEY = "conference_manager_rebuilt_v1";
+        const categories = [
+          "وجبة",
+          "إقامة",
+          "قاعة",
+          "ملعب",
+          "مطبخ",
+          "حمام سباحة",
+          "هدايا",
+          "مصروفات سكرتارية",
+          "مصروفات السمر",
+          "إكراميات",
+          "بركة",
+          "أخرى",
+        ];
+        const $ = (id) => document.getElementById(id);
+        const $$ = (sel, root = document) =>
+          Array.from(root.querySelectorAll(sel));
+        function uid() {
+          return (
+            "id" +
+            Math.random().toString(36).slice(2, 9) +
+            Date.now().toString(36).slice(-5)
+          );
+        }
+        function today() {
+          return new Date().toISOString().slice(0, 10);
+        }
+        function num(v) {
+          const n = parseFloat(
+            String(v ?? "")
+              .replace(/[٠-٩۰-۹]/g, (d) => "٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹".indexOf(d) % 10)
+              .replace(/,/g, "."),
+          );
+          return Number.isFinite(n) ? n : 0;
+        }
+        function toEnglishDigits(value) {
+          return String(value ?? "").replace(
+            /[٠-٩۰-۹]/g,
+            (d) => "٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹".indexOf(d) % 10,
+          );
+        }
+        function fmt(n) {
+          return (
+            new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(
+              num(n),
+            ) + " ج"
+          );
+        }
+        function esc(s) {
+          return toEnglishDigits(s).replace(
+            /[&<>"']/g,
+            (m) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[m],
+          );
+        }
+        function dateLabel(d) {
+          if (!d) return "—";
+          try {
+            return new Date(d + "T00:00:00").toLocaleDateString("ar-EG-u-nu-latn", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+          } catch (e) {
+            return d;
+          }
+        }
+        function dtLocal(iso) {
+          if (!iso) return "";
+          const d = new Date(iso);
+          if (Number.isNaN(d.getTime())) return "";
+          const z = (n) => String(n).padStart(2, "0");
+          return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+        }
+        function localToIso(v) {
+          if (!v) return "";
+          const d = new Date(v);
+          return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+        }
+        function clone(x) {
+          return JSON.parse(JSON.stringify(x));
+        }
+        function getPath(obj, path) {
+          return path.split(".").reduce((o, k) => (o ? o[k] : undefined), obj);
+        }
+        function setPath(obj, path, value) {
+          const p = path.split(".");
+          let cur = obj;
+          for (let i = 0; i < p.length - 1; i++) {
+            cur[p[i]] = cur[p[i]] || {};
+            cur = cur[p[i]];
+          }
+          cur[p[p.length - 1]] = value;
+        }
+        function mealDefaults() {
+          return [
+            ["2026-06-29", "غداء", "غداء يوم الاثنين 29/6/2026"],
+            ["2026-06-29", "عشاء", "عشاء يوم الاثنين 29/6/2026"],
+            ["2026-06-30", "فطار", "فطار يوم الثلاثاء 30/6/2026"],
+            ["2026-06-30", "غداء", "غداء يوم الثلاثاء 30/6/2026"],
+            ["2026-06-30", "عشاء", "عشاء يوم الثلاثاء 30/6/2026"],
+            ["2026-07-01", "فطار", "فطار يوم الأربعاء 1/7/2026"],
+            ["2026-07-01", "غداء", "غداء يوم الأربعاء 1/7/2026"],
+            ["2026-07-01", "عشاء", "عشاء يوم الأربعاء 1/7/2026"],
+            ["2026-07-02", "فطار", "فطار يوم الخميس 2/7/2026"],
+          ].map((r) => ({
+            id: uid(),
+            date: r[0],
+            mealType: r[1],
+            desc: r[2],
+            count: 0,
+            unitPrice: "",
+            expenseId: "",
+          }));
+        }
+        const defaults = {
+          conference: {
+            name: "كنز ولا CANS",
+            place: "بيت الإيمان - أسيوط",
+            admin: "أبونا بطرس",
+            startDate: "2026-06-29",
+            endDate: "2026-07-02",
+            fee: 0,
+            notes: "",
+          },
+          settings: {
+            adminPassword: "1234",
+            hallRate: 200,
+            poolRate: 2500,
+            kitchenRate: 0,
+            stayNights: 3,
+          },
+          managers: [
+            { id: uid(), name: "رامز رمزي", committeeIds: [] },
+            { id: uid(), name: "شنودة بخيت", committeeIds: [] },
+            { id: uid(), name: "هدرا عزيز", committeeIds: [] },
+          ],
+          members: [],
+          expenses: [],
+          revenues: [],
+          committees: [
+            "لجنة السكرتارية",
+            "لجنة التسكين",
+            "لجنة التغذية",
+            "لجنة الميديا والتصوير",
+            "لجنة الترانيم",
+            "لجنة النظام",
+            "لجنة الورش",
+            "لجنة المسرح والترفيه",
+            "لجنة الطلبات والخدمات",
+          ].map((n) => ({ id: uid(), name: n, leader: "", tasks: "" })),
+          activities: [
+            "قداس 1",
+            "قداس 2",
+            "محاضرة 1",
+            "محاضرة 2",
+            "محاضرة 3",
+            "محاضرة 4",
+            "محاضرة 5",
+            "ورشة 1",
+            "ورشة 2",
+            "ورشة 3",
+            "ورشة 4",
+            "ورشة 5",
+          ].map((n) => ({ id: uid(), name: n })),
+          attendance: {},
+          currentActivityId: null,
+          mealPlan: mealDefaults(),
+        };
+        function merge(base, old) {
+          const out = clone(base);
+          if (!old || typeof old !== "object") return out;
+          for (const k in old) {
+            if (Array.isArray(old[k])) out[k] = old[k];
+            else if (
+              old[k] &&
+              typeof old[k] === "object" &&
+              out[k] &&
+              typeof out[k] === "object" &&
+              !Array.isArray(out[k])
+            )
+              out[k] = merge(out[k], old[k]);
+            else out[k] = old[k];
+          }
+          return out;
+        }
+        function load() {
+          try {
+            const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+            const s = merge(defaults, raw);
+            if (!s.currentActivityId && s.activities[0])
+              s.currentActivityId = s.activities[0].id;
+            return s;
+          } catch (e) {
+            return clone(defaults);
+          }
+        }
+        function ensureCoreActivities() {
+          const requiredActivities = [
+            "قداس 1",
+            "قداس 2",
+            "محاضرة 1",
+            "محاضرة 2",
+            "محاضرة 3",
+            "محاضرة 4",
+            "محاضرة 5",
+            "ورشة 1",
+            "ورشة 2",
+            "ورشة 3",
+            "ورشة 4",
+            "ورشة 5",
+          ];
+          state.activities = Array.isArray(state.activities) ? state.activities : [];
+          requiredActivities.forEach((name) => {
+            if (!state.activities.some((a) => a && a.name === name)) {
+              state.activities.push({ id: uid(), name });
+            }
+          });
+          if (!state.currentActivityId && state.activities[0]) {
+            state.currentActivityId = state.activities[0].id;
+          }
+        }
+        let state = load();
+        ensureCoreActivities();
+        let applyingRemoteState = false;
+        let cloudSocket = null;
+        let cloudReady = false;
+        let cloudSaveTimer = null;
+        let lastCloudJson = "";
+        const CLIENT_ID_KEY = STORAGE_KEY + "_client_id";
+        const CLIENT_ID = localStorage.getItem(CLIENT_ID_KEY) || uid();
+        localStorage.setItem(CLIENT_ID_KEY, CLIENT_ID);
+        function save() {
+          const json = JSON.stringify(state);
+          localStorage.setItem(STORAGE_KEY, json);
+          if (!applyingRemoteState) scheduleCloudSave(json);
+        }
+        function updateCloudStatus(text, mode) {
+          const el = $("cloudSyncStatus");
+          if (!el) return;
+          el.textContent = text;
+          el.classList.remove("online", "offline", "saving");
+          if (mode) el.classList.add(mode);
+        }
+        function scheduleCloudSave(json) {
+          if (!cloudReady || !cloudSocket || !cloudSocket.connected) return;
+          if (json === lastCloudJson) return;
+          clearTimeout(cloudSaveTimer);
+          updateCloudStatus("جار الحفظ أونلاين", "saving");
+          cloudSaveTimer = setTimeout(() => {
+            lastCloudJson = json;
+            cloudSocket.emit("save-state", {
+              clientId: CLIENT_ID,
+              state: JSON.parse(json),
+            });
+          }, 450);
+        }
+        function applyRemoteState(remoteState) {
+          if (!remoteState || typeof remoteState !== "object") return;
+          const remoteJson = JSON.stringify(remoteState);
+          if (remoteJson === JSON.stringify(state)) return;
+          applyingRemoteState = true;
+          state = merge(defaults, remoteState);
+          ensureCoreActivities();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          render();
+          applyingRemoteState = false;
+          updateCloudStatus("متزامن أونلاين", "online");
+        }
+        function initCloudSync() {
+          if (typeof io !== "function") {
+            updateCloudStatus("محلي فقط", "offline");
+            return;
+          }
+          cloudSocket = io({ transports: ["websocket", "polling"] });
+          cloudSocket.on("connect", () => {
+            cloudReady = true;
+            updateCloudStatus("متصل أونلاين", "online");
+          });
+          cloudSocket.on("disconnect", () => {
+            cloudReady = false;
+            updateCloudStatus("غير متصل", "offline");
+          });
+          cloudSocket.on("server-state", (payload) => {
+            if (payload && payload.state) {
+              lastCloudJson = JSON.stringify(payload.state);
+              applyRemoteState(payload.state);
+            } else {
+              scheduleCloudSave(JSON.stringify(state));
+            }
+          });
+          cloudSocket.on("state-updated", (payload) => {
+            if (!payload || payload.clientId === CLIENT_ID) return;
+            if (payload.state) {
+              lastCloudJson = JSON.stringify(payload.state);
+              applyRemoteState(payload.state);
+              toast("تم تحديث البيانات من جهاز آخر");
+            }
+          });
+          cloudSocket.on("state-saved", () => {
+            updateCloudStatus("متزامن أونلاين", "online");
+          });
+        }
+        function toast(msg) {
+          const t = $("toast");
+          t.textContent = msg;
+          t.classList.add("show");
+          clearTimeout(window.__toast);
+          window.__toast = setTimeout(() => t.classList.remove("show"), 1800);
+        }
+        function totals() {
+          const count = state.members.length;
+          const fee = num(state.conference.fee);
+          const due = count * fee;
+          const paid = state.members.reduce((s, m) => s + num(m.paid), 0);
+          const remaining = Math.max(0, due - paid);
+          const other = state.revenues.reduce((s, r) => s + num(r.amount), 0);
+          const exp = state.expenses.reduce((s, e) => s + num(e.amount), 0);
+          return {
+            count,
+            fee,
+            due,
+            paid,
+            remaining,
+            other,
+            exp,
+            income: paid + other,
+            balance: paid + other - exp,
+            realCost: count ? exp / count : 0,
+          };
+        }
+        function memberName(id) {
+          const m = state.members.find((x) => x.id === id);
+          return m ? m.name : "";
+        }
+        function memberRemaining(m) {
+          return Math.max(0, num(state.conference.fee) - num(m.paid));
+        }
+        function memberStatus(m) {
+          const fee = num(state.conference.fee),
+            paid = num(m.paid);
+          if (fee > 0 && paid >= fee) return "paid";
+          if (paid > 0) return "partial";
+          return "unpaid";
+        }
+        function statusBadge(m) {
+          const st = memberStatus(m);
+          if (st === "paid") return '<span class="badge green">دفع كامل</span>';
+          if (st === "partial")
+            return '<span class="badge orange">دفع جزء</span>';
+          return '<span class="badge red">لم يدفع</span>';
+        }
+        function openPage(id) {
+          $$(".page").forEach((p) => p.classList.toggle("active", p.id === id));
+          $$("#mainNav button").forEach((b) =>
+            b.classList.toggle("active", b.dataset.page === id),
+          );
+          render();
+        }
+        function closeModals() {
+          $$(".modal").forEach((m) => m.classList.remove("active"));
+        }
+        function openModal(id) {
+          $(id).classList.add("active");
+        }
+        function fillSelect(
+          id,
+          items,
+          valueKey = "id",
+          labelKey = "name",
+          emptyText = "",
+        ) {
+          const el = $(id);
+          if (!el) return;
+          el.innerHTML =
+            (emptyText ? `<option value="">${emptyText}</option>` : "") +
+            items
+              .map(
+                (x) =>
+                  `<option value="${esc(x[valueKey])}">${esc(x[labelKey])}</option>`,
+              )
+              .join("");
+        }
+        function fillCategorySelect(id) {
+          const el = $(id);
+          if (el)
+            el.innerHTML = categories
+              .map((c) => `<option>${c}</option>`)
+              .join("");
+        }
+        function fillMealPlanSelect() {
+          const box = $("mealChoiceButtons");
+          if (box) {
+            const selectedId = box.dataset.selected || "";
+            box.innerHTML = state.mealPlan.length
+              ? state.mealPlan
+                  .map((r) => {
+                    const count = num(r.count) || state.members.length || 0;
+                    const amount = count * num(r.unitPrice);
+                    const isActive = selectedId === r.id;
+                    const isRegistered = !!r.expenseId && state.expenses.some((e) => e.id === r.expenseId);
+                    const statusText = isRegistered ? "مسجلة" : "غير مسجلة";
+                    return `<article class="meal-choice-card ${isActive ? "active" : ""} ${isRegistered ? "registered" : ""}"><button type="button" class="meal-choice-btn ${isActive ? "active" : ""}" data-meal-choice="${esc(r.id)}"><span>${esc(r.mealType || "وجبة")} · ${statusText}</span><strong>${esc(r.desc || "وجبة")}</strong><small>${esc(dateLabel(r.date))} · عدد ${toEnglishDigits(count)}${amount > 0 ? " · " + fmt(amount) : ""}</small></button><div class="meal-card-actions"><button type="button" class="meal-delete-mini" data-delete-meal="${esc(r.id)}">حذف</button></div></article>`;
+                  })
+                  .join("")
+              : '<div class="hint">لا توجد وجبات جاهزة. اضغط إضافة وجبة.</div>';
+          }
+          const el = $("exMealPlanSelect");
+          if (!el) return;
+          const current = el.value;
+          el.innerHTML =
+            `<option value="">اختر وجبة جاهزة</option>` +
+            state.mealPlan
+              .map((r) => {
+                const count = num(r.count) || state.members.length || 0;
+                const total = count * num(r.unitPrice);
+                const priceText = total > 0 ? ` | ${fmt(total)}` : "";
+                return `<option value="${esc(r.id)}">${esc(r.desc || "وجبة")} | ${esc(dateLabel(r.date))} | عدد ${toEnglishDigits(count)}${priceText}</option>`;
+              })
+              .join("");
+          if (state.mealPlan.some((r) => r.id === current)) el.value = current;
+        }
+        let conferenceEditMode = false;
+        function updateSettingsInputs() {
+          $$("[data-setting]").forEach((el) => {
+            const v = getPath(state, el.dataset.setting);
+            if (document.activeElement !== el) el.value = toEnglishDigits(v ?? "");
+          });
+        }
+        function updateConferenceLockUI() {
+          const locked = !conferenceEditMode;
+          const panel = $("conferenceSettingsPanel");
+          const btn = $("conferenceEditBtn");
+          if (panel) panel.classList.toggle("is-locked", locked);
+          if (btn) {
+            btn.textContent = locked ? "تعديل البيانات" : "حفظ التعديل";
+            btn.classList.toggle("primary", !locked);
+            btn.classList.toggle("soft", locked);
+          }
+          $$("[data-setting^='conference.']").forEach((el) => {
+            el.disabled = locked;
+            el.classList.toggle("locked-input", locked);
+          });
+        }
+        function toggleConferenceEdit() {
+          conferenceEditMode = !conferenceEditMode;
+          if (!conferenceEditMode) {
+            save();
+            renderDashboard();
+            toast("تم حفظ وتثبيت بيانات المؤتمر");
+          } else {
+            toast("يمكنك الآن تعديل بيانات المؤتمر");
+          }
+          updateConferenceLockUI();
+        }
+        function calcExpenseAmount(prefix = "ex") {
+          const manual = num($(`${prefix}ManualAmount`)?.value);
+          if (manual > 0) return manual;
+          const count = num($(`${prefix}Count`)?.value) || (prefix === "ex" && $("exCategory")?.value === "وجبة" ? state.members.length : 1) || 1;
+          const units = prefix === "ex" && $("exCategory")?.value === "وجبة" ? 1 : (num($(`${prefix}Units`)?.value) || 1);
+          const price = num($(`${prefix}UnitPrice`)?.value);
+          return count * units * price;
+        }
+        function setExpenseCategory(cat) {
+          $("exCategory").value = cat;
+          const mealBox = $("mealPickerBox");
+          if (mealBox) mealBox.classList.toggle("hidden", cat !== "وجبة");
+          if (cat !== "وجبة" && $("exMealPlanSelect")) $("exMealPlanSelect").value = "";
+          $$("#expenseQuickButtons button").forEach((b) =>
+            b.classList.toggle("active", b.dataset.cat === cat),
+          );
+          if (cat === "وجبة") {
+            $("exCount").value = state.members.length || 0;
+            $("exUnits").value = 1;
+          } else if (cat === "إقامة") {
+            $("exUnits").value = state.settings.stayNights || 1;
+          } else if (cat === "قاعة") {
+            $("exUnitPrice").value = state.settings.hallRate || "";
+            $("exUnits").value = 1;
+          } else if (cat === "حمام سباحة") {
+            $("exUnitPrice").value = state.settings.poolRate || "";
+            $("exUnits").value = 1;
+          } else if (cat === "مطبخ") {
+            $("exUnitPrice").value = state.settings.kitchenRate || "";
+            $("exUnits").value = 1;
+          }
+          updateExpensePreview();
+        }
+        function updateExpensePreview() {
+          const amount = calcExpenseAmount("ex");
+          $("exPreview").textContent = fmt(amount);
+        }
+        function applyMealChoice(id) {
+          const meal = state.mealPlan.find((r) => r.id === id);
+          if (!meal) return;
+          setExpenseCategory("وجبة");
+          const box = $("mealChoiceButtons");
+          if (box) {
+            box.dataset.selected = id;
+            $$('[data-meal-choice]', box).forEach((b) => b.classList.toggle("active", b.dataset.mealChoice === id));
+          }
+          $("exDate").value = meal.date || today();
+          $("exMealType").value = meal.mealType || "أخرى";
+          $("exCount").value = num(meal.count) || state.members.length || 0;
+          $("exUnits").value = 1;
+          if (num(meal.unitPrice) > 0) $("exUnitPrice").value = toEnglishDigits(meal.unitPrice);
+          $("exDesc").value = meal.desc || "";
+          if ($("exMember")) $("exMember").value = "";
+          setExpenseScope("group");
+          updateExpensePreview();
+          if ($("exUnitPrice")) $("exUnitPrice").focus();
+        }
+        function render() {
+          save();
+          updateSettingsInputs();
+          updateConferenceLockUI();
+          renderStaticSelects();
+          renderDashboard();
+          renderMembers();
+          renderMealPlan();
+          renderExpenses();
+          renderRevenues();
+          renderCommittees();
+          renderAttendance();
+          renderReports();
+        }
+        function renderStaticSelects() {
+          fillSelect(
+            "exMember",
+            state.members,
+            "id",
+            "name",
+            "",
+          );
+          fillSelect(
+            "editExMember",
+            state.members,
+            "id",
+            "name",
+            "",
+          );
+          fillCategorySelect("exCategory");
+          fillCategorySelect("editExCategory");
+          fillMealPlanSelect();
+          fillSelect("managerEditSelect", state.managers, "id", "name", "اختر مسؤولًا");
+          fillSelect("managerEditCommitteeSelect", state.committees, "id", "name", "اختر لجنة");
+          fillSelect("committeeEditSelect", state.committees, "id", "name", "اختر لجنة");
+          const q = $("expenseQuickButtons");
+          if (q && !q.dataset.ready) {
+            q.innerHTML = categories.filter((c) => c !== "وجبة")
+              .map(
+                (c) =>
+                  `<button type="button" data-cat="${esc(c)}">${esc(c)}</button>`,
+              )
+              .join("");
+            q.dataset.ready = "1";
+            q.addEventListener("click", (e) => {
+              const b = e.target.closest("button[data-cat]");
+              if (b) setExpenseCategory(b.dataset.cat);
+            });
+          }
+        }
+        function renderDashboard() {
+          const t = totals();
+          $("heroName").textContent = state.conference.name || "—";
+          $("heroPlace").textContent = state.conference.place || "—";
+          $("heroStart").textContent = dateLabel(state.conference.startDate);
+          $("heroEnd").textContent = dateLabel(state.conference.endDate);
+          if ($("homeAdminDisplay")) $("homeAdminDisplay").textContent = state.conference.admin || "—";
+          $("kpiGrid").innerHTML = [
+            ["عدد الأعضاء", t.count],
+            ["المدفوع من الأعضاء", fmt(t.paid)],
+            ["كل المصروفات", fmt(t.exp)],
+            ["الرصيد الحالي", fmt(t.balance)],
+            ["تكلفة الفرد الحقيقية", fmt(t.realCost)],
+          ]
+            .map(
+              (x) =>
+                `<article class="kpi"><span>${x[0]}</span><strong>${x[1]}</strong></article>`,
+            )
+            .join("");
+          const mg = $("managerGrid");
+          mg.innerHTML = state.managers
+            .map((m) => {
+              const chips = m.committeeIds
+                .map((id) => state.committees.find((c) => c.id === id))
+                .filter(Boolean)
+                .map(
+                  (c) =>
+                    `<span class="tag">${esc(c.name)} <button data-manager-unassign="${m.id}" data-committee="${c.id}">×</button></span>`,
+                )
+                .join("");
+              return `<article class="manager-card"><h3>${esc(m.name || "مسؤول متابعة")}</h3><div class="card-display-line"><span>عدد اللجان</span><strong>${toEnglishDigits(m.committeeIds.length)}</strong></div><div class="tag-list">${chips || '<span class="hint">لا توجد لجان مخصصة</span>'}</div></article>`;
+            })
+            .join("");
+        }
+        function filteredMembers() {
+          const q = ($("memberSearch")?.value || "").trim().toLowerCase();
+          const filter = $("paymentFilter")?.value || "all";
+          return state.members.filter((m) => {
+            const okSearch =
+              !q ||
+              String(m.name).toLowerCase().includes(q) ||
+              String(m.phone).includes(q);
+            const okFilter = filter === "all" || memberStatus(m) === filter;
+            return okSearch && okFilter;
+          });
+        }
+        function renderMembers() {
+          const rows = filteredMembers();
+          const t = totals();
+          $("membersPaidTotal").textContent = fmt(t.paid);
+          $("membersRemainingTotal").textContent = fmt(t.remaining);
+          $("membersTable").innerHTML =
+            `<thead><tr><th>#</th><th>الاسم</th><th>التليفون</th><th>المدفوع</th><th>الباقي</th><th>الحالة</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody>${rows.map((m, i) => `<tr><td>${i + 1}</td><td>${esc(m.name)}</td><td>${esc(m.phone || "—")}</td><td>${fmt(m.paid)}</td><td>${fmt(memberRemaining(m))}</td><td>${statusBadge(m)}</td><td>${esc(m.notes || "—")}</td><td><button class="btn soft small" data-edit-member="${m.id}">تعديل</button></td></tr>`).join("") || '<tr><td colspan="8">لا توجد بيانات</td></tr>'}</tbody>`;
+          $("membersCards").innerHTML =
+            rows
+              .map(
+                (m, i) =>
+                  `<article class="mobile-card"><div class="mobile-head"><div class="mobile-title">${esc(m.name)}</div><span class="mobile-no">${i + 1}</span></div>${line("التليفون", esc(m.phone || "—"))}${line("المدفوع", fmt(m.paid))}${line("الباقي", fmt(memberRemaining(m)))}${line("الحالة", statusBadge(m))}${line("ملاحظات", esc(m.notes || "—"))}<div class="mobile-actions"><button class="btn soft" data-edit-member="${m.id}">تعديل</button></div></article>`,
+              )
+              .join("") || emptyCard("لا توجد أسماء بعد");
+        }
+        function line(label, value) {
+          return `<div class="mobile-line"><span class="mobile-label">${label}</span><span class="mobile-value">${value}</span></div>`;
+        }
+        function emptyCard(txt) {
+          return `<article class="mobile-card"><div class="mobile-title">${esc(txt)}</div></article>`;
+        }
+        function renderMealPlan() {
+          const rows = state.mealPlan;
+          $("mealPlanTable").innerHTML =
+            `<thead><tr><th>#</th><th>التاريخ</th><th>الوجبة</th><th>البيان</th><th>عدد الأفراد</th><th>سعر الفرد</th><th>الإجمالي</th><th>إجراءات</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td>${i + 1}</td><td><input class="mini-input" type="date" data-meal-field="date" data-id="${r.id}" value="${esc(r.date)}"></td><td><select class="mini-input" data-meal-field="mealType" data-id="${r.id}"><option ${r.mealType === "فطار" ? "selected" : ""}>فطار</option><option ${r.mealType === "غداء" ? "selected" : ""}>غداء</option><option ${r.mealType === "عشاء" ? "selected" : ""}>عشاء</option><option ${r.mealType === "أخرى" ? "selected" : ""}>أخرى</option></select></td><td><input class="mini-input" data-meal-field="desc" data-id="${r.id}" value="${esc(r.desc)}"></td><td><input class="mini-input" data-meal-field="count" data-id="${r.id}" value="${esc(r.count || state.members.length || 0)}"></td><td><input class="mini-input" data-meal-field="unitPrice" data-id="${r.id}" value="${esc(r.unitPrice)}"></td><td>${fmt((num(r.count) || state.members.length || 0) * num(r.unitPrice))}</td><td><button class="btn green small" data-add-meal-expense="${r.id}">${r.expenseId ? "تحديث المصروف" : "إضافة مصروف"}</button> <button class="btn danger small" data-delete-meal="${r.id}">حذف</button></td></tr>`).join("")}</tbody>`;
+          $("mealCards").innerHTML =
+            rows
+              .map(
+                (r, i) =>
+                  `<article class="mobile-card"><div class="mobile-head"><div class="mobile-title">${esc(r.desc)}</div><span class="mobile-no">${i + 1}</span></div>${line("التاريخ", esc(r.date))}${line("الوجبة", esc(r.mealType))}${line("عدد الأفراد", esc(r.count || state.members.length || 0))}${line("سعر الفرد", fmt(r.unitPrice))}${line("الإجمالي", fmt((num(r.count) || state.members.length || 0) * num(r.unitPrice)))}<div class="mobile-actions"><button class="btn green" data-add-meal-expense="${r.id}">${r.expenseId ? "تحديث المصروف" : "إضافة مصروف"}</button><button class="btn danger" data-delete-meal="${r.id}">حذف</button></div></article>`,
+              )
+              .join("") || emptyCard("لا توجد وجبات");
+        }
+        function renderExpenses() {
+          const t = totals();
+          const mealsTotal = state.expenses
+            .filter((e) => e.category === "وجبة")
+            .reduce((s, e) => s + num(e.amount), 0);
+          $("expenseGrandTotal").textContent = fmt(t.exp);
+          $("expenseCostPerMember").textContent = fmt(t.realCost);
+          if ($("expenseMemberCount")) $("expenseMemberCount").textContent = toEnglishDigits(t.count);
+          if ($("expenseBalanceMini")) $("expenseBalanceMini").textContent = fmt(t.balance);
+          if ($("expenseMealsTotal")) $("expenseMealsTotal").textContent = fmt(mealsTotal);
+          $("expensesTable").innerHTML =
+            `<thead><tr><th>#</th><th>التاريخ</th><th>البند</th><th>الشخص</th><th>البيان</th><th>عدد</th><th>وحدات</th><th>سعر</th><th>المبلغ</th><th>إجراءات</th></tr></thead><tbody>${state.expenses.map((e, i) => `<tr><td>${i + 1}</td><td>${esc(e.date || "—")}</td><td>${esc(e.category)}</td><td>${esc(memberName(e.memberId) || "المؤتمر كله")}</td><td>${esc(e.desc || "—")}</td><td>${esc(e.count || "—")}</td><td>${esc(e.units || "—")}</td><td>${fmt(e.unitPrice)}</td><td><strong>${fmt(e.amount)}</strong></td><td><button class="btn soft small" data-edit-expense="${e.id}">تعديل</button></td></tr>`).join("") || '<tr><td colspan="10">لا توجد مصروفات</td></tr>'}</tbody>`;
+          function expenseClass(e) {
+            if (e.category === "وجبة") return "food";
+            if (e.category === "إقامة" || e.category === "قاعة") return "stay";
+            if (e.category === "هدايا" || e.category === "إكراميات" || e.category === "أخرى") return "warn";
+            return "";
+          }
+          $("expensesCards").innerHTML =
+            state.expenses
+              .map(
+                (e, i) =>
+                  `<article class="expense-item-card ${expenseClass(e)}"><div class="expense-item-top"><div class="expense-item-title"><strong>${esc(e.category || "مصروف")}</strong><small>${esc(e.date || "—")} · #${i + 1}</small></div><div class="expense-item-amount">${fmt(e.amount)}</div></div><div class="expense-item-desc">${esc(e.desc || "بدون بيان")}</div><div class="expense-meta-grid"><span>الشخص<b>${esc(memberName(e.memberId) || "المؤتمر كله")}</b></span><span>العدد<b>${esc(e.count || "—")}</b></span><span>الوحدات<b>${esc(e.units || "—")}</b></span><span>سعر الوحدة<b>${fmt(e.unitPrice)}</b></span></div><div class="expense-card-actions"><button class="btn soft" data-edit-expense="${e.id}">تعديل المصروف</button></div></article>`,
+              )
+              .join("") || `<article class="expense-item-card"><div class="expense-item-title"><strong>لا توجد مصروفات بعد</strong><small>ابدأ بإضافة أول مصروف من النموذج.</small></div></article>`;
+        }
+        function renderRevenues() {
+          const total = state.revenues.reduce((s, r) => s + num(r.amount), 0);
+          $("revenueTotal").textContent = fmt(total);
+          $("revenuesTable").innerHTML =
+            `<thead><tr><th>#</th><th>التاريخ</th><th>النوع</th><th>المصدر</th><th>المبلغ</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody>${state.revenues.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.date || "—")}</td><td>${esc(r.type)}</td><td>${esc(r.source || "—")}</td><td>${fmt(r.amount)}</td><td>${esc(r.notes || "—")}</td><td><button class="btn soft small" data-edit-revenue="${r.id}">تعديل</button></td></tr>`).join("") || '<tr><td colspan="7">لا توجد إيرادات أخرى</td></tr>'}</tbody>`;
+          $("revenuesCards").innerHTML =
+            state.revenues
+              .map(
+                (r, i) =>
+                  `<article class="mobile-card"><div class="mobile-head"><div class="mobile-title">${esc(r.type)}</div><span class="mobile-no">${i + 1}</span></div>${line("التاريخ", esc(r.date || "—"))}${line("المصدر", esc(r.source || "—"))}${line("المبلغ", fmt(r.amount))}${line("ملاحظات", esc(r.notes || "—"))}<div class="mobile-actions"><button class="btn soft" data-edit-revenue="${r.id}">تعديل</button></div></article>`,
+              )
+              .join("") || emptyCard("لا توجد إيرادات");
+        }
+        function renderCommittees() {
+          const box = $("committeeGrid");
+          box.innerHTML =
+            state.committees
+              .map(
+                (c) =>
+                  `<article class="committee-card"><h3>${esc(c.name)}</h3><div class="card-display-line"><span>المسؤول</span><strong>${esc(c.leader || "—")}</strong></div><div class="card-display-line"><span>المهام</span><strong>${esc(c.tasks || "—")}</strong></div></article>`,
+              )
+              .join("") || '<div class="panel">لا توجد لجان</div>';
+        }
+        function currentAttendance() {
+          const id = state.currentActivityId;
+          if (!state.attendance[id]) state.attendance[id] = {};
+          return state.attendance[id];
+        }
+        function arrivalRanks() {
+          const data = currentAttendance();
+          return Object.entries(data)
+            .filter(([mid, v]) => v && v.arrivalTime)
+            .sort(
+              (a, b) => new Date(a[1].arrivalTime) - new Date(b[1].arrivalTime),
+            )
+            .reduce((acc, [mid], i) => {
+              acc[mid] = i + 1;
+              return acc;
+            }, {});
+        }
+        function renderAttendance() {
+          fillSelect("activitySelect", state.activities, "id", "name", "");
+          $("activitySelect").value = state.currentActivityId || "";
+          const data = currentAttendance();
+          const q = ($("attendanceSearch")?.value || "").trim().toLowerCase();
+          const rows = state.members.filter(
+            (m) => !q || m.name.toLowerCase().includes(q),
+          );
+          const counts = { present: 0, absent: 0, excused: 0, empty: 0 };
+          state.members.forEach((m) => {
+            const st = data[m.id]?.status || "";
+            if (st === "حاضر") counts.present++;
+            else if (st === "غائب") counts.absent++;
+            else if (st === "معذور") counts.excused++;
+            else counts.empty++;
+          });
+          $("attendanceStats").innerHTML = [
+            ["حاضر", counts.present],
+            ["غائب", counts.absent],
+            ["معذور", counts.excused],
+            ["غير مسجل", counts.empty],
+          ]
+            .map(
+              (x) =>
+                `<div class="stat"><span>${x[0]}</span><strong>${x[1]}</strong></div>`,
+            )
+            .join("");
+          const ranks = arrivalRanks();
+          function stBadge(st) {
+            if (st === "حاضر") return '<span class="badge green">حاضر</span>';
+            if (st === "غائب") return '<span class="badge red">غائب</span>';
+            if (st === "معذور")
+              return '<span class="badge orange">معذور</span>';
+            return '<span class="badge">غير مسجل</span>';
+          }
+          $("attendanceTable").innerHTML =
+            `<thead><tr><th>#</th><th>الاسم</th><th>الحالة</th><th>ترتيب الوصول</th><th>وقت الوصول</th><th>إجراءات</th></tr></thead><tbody>${
+              rows
+                .map((m, i) => {
+                  const rec = data[m.id] || {};
+                  return `<tr><td>${i + 1}</td><td>${esc(m.name)}</td><td>${stBadge(rec.status)}</td><td>${ranks[m.id] ? `<span class="arrival-rank">${ranks[m.id]}</span>` : "—"}</td><td>${rec.arrivalTime ? `<span class="arrival-time">${new Date(rec.arrivalTime).toLocaleString("ar-EG-u-nu-latn")}</span>` : "—"}</td><td><button class="btn primary small" data-arrive-now="${m.id}">وصل الآن</button> <button class="btn soft small" data-edit-arrival="${m.id}">تعديل الوقت</button></td></tr>`;
+                })
+                .join("") || '<tr><td colspan="6">لا توجد أسماء</td></tr>'
+            }</tbody>`;
+          $("attendanceCards").innerHTML =
+            rows
+              .map((m, i) => {
+                const rec = data[m.id] || {};
+                return `<article class="mobile-card"><div class="mobile-head"><div class="mobile-title">${esc(m.name)}</div><span class="mobile-no">${i + 1}</span></div>${line("الحالة", stBadge(rec.status))}${line("الترتيب", ranks[m.id] ? `<span class="arrival-rank">${ranks[m.id]}</span>` : "—")}${line("وقت الوصول", rec.arrivalTime ? new Date(rec.arrivalTime).toLocaleString("ar-EG-u-nu-latn") : "—")}<div class="mobile-actions"><button class="btn primary" data-arrive-now="${m.id}">وصل الآن</button><button class="btn soft" data-edit-arrival="${m.id}">تعديل الوقت</button></div></article>`;
+              })
+              .join("") || emptyCard("لا توجد أسماء");
+        }
+        function topCommitted() {
+          return state.members
+            .map((m) => {
+              let present = 0,
+                rankSum = 0,
+                rankCount = 0;
+              state.activities.forEach((a) => {
+                const rec = state.attendance[a.id]?.[m.id];
+                if (rec?.status === "حاضر") present++;
+                if (rec?.arrivalTime) {
+                  const list = Object.entries(state.attendance[a.id] || {})
+                    .filter(([mid, v]) => v.arrivalTime)
+                    .sort(
+                      (x, y) =>
+                        new Date(x[1].arrivalTime) - new Date(y[1].arrivalTime),
+                    );
+                  const idx = list.findIndex(([mid]) => mid === m.id);
+                  if (idx >= 0) {
+                    rankSum += idx + 1;
+                    rankCount++;
+                  }
+                }
+              });
+              return {
+                member: m,
+                present,
+                avgRank: rankCount ? rankSum / rankCount : 999,
+                rankCount,
+              };
+            })
+            .sort((a, b) => b.present - a.present || a.avgRank - b.avgRank)
+            .slice(0, 10);
+        }
+        function groupExpenses() {
+          const g = {};
+          state.expenses.forEach((e) => {
+            g[e.category] = (g[e.category] || 0) + num(e.amount);
+          });
+          return g;
+        }
+        function formatReportArrival(iso) {
+          if (!iso) return "—";
+          try {
+            return new Date(iso).toLocaleString("ar-EG-u-nu-latn", {
+              day: "2-digit",
+              month: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+          } catch (e) {
+            return iso;
+          }
+        }
+        function topPerActivity(limit = 10) {
+          return state.activities.map((activity) => {
+            const rows = Object.entries(state.attendance[activity.id] || {})
+              .filter(([mid, rec]) => rec && rec.arrivalTime)
+              .sort(
+                (a, b) =>
+                  new Date(a[1].arrivalTime) - new Date(b[1].arrivalTime),
+              )
+              .slice(0, limit)
+              .map(([mid, rec], i) => ({
+                rank: i + 1,
+                member: state.members.find((m) => m.id === mid),
+                arrivalTime: rec.arrivalTime,
+              }))
+              .filter((x) => x.member);
+            return { activity, rows };
+          });
+        }
+        function renderReports() {
+          const t = totals(),
+            g = groupExpenses(),
+            top = topCommitted(),
+            activityTop = topPerActivity(10);
+          $("reportContent").innerHTML =
+            `<div class="report-grid"><article class="report-card"><h3>الملخص المالي</h3><div>${reportLine("إجمالي مستحقات الأعضاء", fmt(t.due))}${reportLine("مدفوعات الأعضاء", fmt(t.paid))}${reportLine("إيرادات أخرى", fmt(t.other))}${reportLine("إجمالي المصروفات", fmt(t.exp))}${reportLine("الرصيد الحالي", fmt(t.balance))}${reportLine("تكلفة الفرد الحقيقية", fmt(t.realCost))}</div></article><article class="report-card"><h3>الأعضاء</h3><div>${reportLine("عدد الأعضاء", t.count)}${reportLine("دفع كامل", state.members.filter((m) => memberStatus(m) === "paid").length)}${reportLine("دفع جزء", state.members.filter((m) => memberStatus(m) === "partial").length)}${reportLine("لم يدفع", state.members.filter((m) => memberStatus(m) === "unpaid").length)}${reportLine("إجمالي الباقي", fmt(t.remaining))}</div></article><article class="report-card"><h3>أكثر 10 ملتزمين</h3><div>${top.map((x, i) => reportLine(i + 1 + " - " + esc(x.member.name), `${x.present} حضور${x.rankCount ? " | متوسط الوصول " + x.avgRank.toFixed(1) : ""}`)).join("") || ''}</div></article></div><div class="panel"><h3 class="section-title">أفضل 10 في كل نشاط</h3><div class="report-grid">${activityTop.map((item) => `<article class="report-card activity-top-card"><h3>${esc(item.activity.name)}</h3><div>${item.rows.map((x) => reportLine(x.rank + " - " + esc(x.member.name), formatReportArrival(x.arrivalTime))).join("") || '<p class="hint">لا توجد بيانات وصول.</p>'}</div></article>`).join("")}</div></div><div class="panel"><h3 class="section-title">المصروفات حسب البند</h3><div class="report-grid">${
+              Object.keys(g)
+                .map(
+                  (k) =>
+                    `<article class="report-card"><h3>${esc(k)}</h3><strong>${fmt(g[k])}</strong></article>`,
+                )
+                .join("") || ''
+            }</div></div>`;
+        }
+        function reportLine(a, b) {
+          return `<div style="display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed #dbe3ef;padding:7px 0"><span>${a}</span><strong>${b}</strong></div>`;
+        }
+        let expenseScope = "group";
+        function setExpenseScope(scope) {
+          expenseScope = scope === "individual" ? "individual" : "group";
+          $$('[data-exp-scope]').forEach((b) => b.classList.toggle("active", b.dataset.expScope === expenseScope));
+          const wrap = $("exMemberWrap");
+          if (wrap) wrap.classList.toggle("hidden-field", expenseScope !== "individual");
+          if (expenseScope === "individual" && $("exMember") && !$("exMember").value && state.members[0]) $("exMember").value = state.members[0].id;
+          if (expenseScope !== "individual" && $("exMember")) $("exMember").value = "";
+        }
+        function selectedManager() {
+          const id = $("managerEditSelect")?.value || "";
+          return state.managers.find((m) => m.id === id);
+        }
+        function renderManagerEditor(id = "") {
+          fillSelect("managerEditSelect", state.managers, "id", "name", "اختر مسؤولًا");
+          fillSelect("managerEditCommitteeSelect", state.committees, "id", "name", "اختر لجنة");
+          if (id && $("managerEditSelect")) $("managerEditSelect").value = id;
+          const m = selectedManager();
+          if ($("managerEditName")) $("managerEditName").value = m ? m.name : "";
+          const box = $("managerEditTags");
+          if (box) {
+            box.innerHTML = m
+              ? (m.committeeIds.map((cid) => state.committees.find((c) => c.id === cid)).filter(Boolean).map((c) => `<span class="tag">${esc(c.name)} <button type="button" data-manager-modal-unassign="${m.id}" data-committee="${c.id}">×</button></span>`).join("") || '<span class="hint">لا توجد لجان مخصصة</span>')
+              : '<span class="hint">اختر مسؤولًا أولًا</span>';
+          }
+        }
+        function openManagerEditor(id = "") {
+          renderManagerEditor(id || state.managers[0]?.id || "");
+          openModal("managerEditorModal");
+        }
+        function saveManagerEditor() {
+          const m = selectedManager();
+          if (!m) { toast("اختر مسؤولًا"); return; }
+          const name = $("managerEditName").value.trim();
+          if (!name) { toast("اكتب اسم المسؤول"); return; }
+          m.name = name;
+          toast("تم حفظ المسؤول");
+          render();
+          renderManagerEditor(m.id);
+        }
+        function deleteManagerEditor() {
+          const m = selectedManager();
+          if (!m) { toast("اختر مسؤولًا"); return; }
+          state.managers = state.managers.filter((x) => x.id !== m.id);
+          closeModals();
+          toast("تم حذف المسؤول");
+          render();
+        }
+        function selectedCommittee() {
+          const id = $("committeeEditSelect")?.value || "";
+          return state.committees.find((c) => c.id === id);
+        }
+        function renderCommitteeEditor(id = "") {
+          fillSelect("committeeEditSelect", state.committees, "id", "name", "اختر لجنة");
+          if (id && $("committeeEditSelect")) $("committeeEditSelect").value = id;
+          const c = selectedCommittee();
+          if ($("committeeEditName")) $("committeeEditName").value = c ? c.name : "";
+          if ($("committeeEditLeader")) $("committeeEditLeader").value = c ? (c.leader || "") : "";
+          if ($("committeeEditTasks")) $("committeeEditTasks").value = c ? (c.tasks || "") : "";
+        }
+        function openCommitteeEditor(id = "") {
+          renderCommitteeEditor(id || state.committees[0]?.id || "");
+          openModal("committeeEditorModal");
+        }
+        function saveCommitteeEditor() {
+          const c = selectedCommittee();
+          if (!c) { toast("اختر لجنة"); return; }
+          const name = $("committeeEditName").value.trim();
+          if (!name) { toast("اكتب اسم اللجنة"); return; }
+          c.name = name;
+          c.leader = $("committeeEditLeader").value.trim();
+          c.tasks = $("committeeEditTasks").value.trim();
+          toast("تم حفظ اللجنة");
+          render();
+          renderCommitteeEditor(c.id);
+        }
+        function deleteCommitteeEditor() {
+          const c = selectedCommittee();
+          if (!c) { toast("اختر لجنة"); return; }
+          state.committees = state.committees.filter((x) => x.id !== c.id);
+          state.managers.forEach((m) => (m.committeeIds = m.committeeIds.filter((id) => id !== c.id)));
+          closeModals();
+          toast("تم حذف اللجنة");
+          render();
+        }
+        function selectedMealId() {
+          return $("mealChoiceButtons")?.dataset.selected || "";
+        }
+        function autoSubmitExpenseIfReady() {
+          if (!$('exDesc') || !$('exDesc').value.trim()) return false;
+          if (calcExpenseAmount('ex') <= 0) return false;
+          addExpenseFromForm();
+          return true;
+        }
+        function autoSubmitMealIfReady() {
+          if ($("exCategory")?.value !== "وجبة") return false;
+          if (!selectedMealId()) return false;
+          if (num($("exUnitPrice")?.value) <= 0) return false;
+          addExpenseFromForm();
+          return true;
+        }
+        function quickAddMealFromButtons() {
+          const desc = window.prompt("اكتب بيان الوجبة الجديدة", "وجبة إضافية");
+          if (desc === null) return;
+          const cleanDesc = desc.trim() || "وجبة إضافية";
+          state.mealPlan.push({
+            id: uid(),
+            date: today(),
+            mealType: "أخرى",
+            desc: cleanDesc,
+            count: state.members.length || 0,
+            unitPrice: "",
+            expenseId: "",
+          });
+          toast("تمت إضافة الوجبة");
+          render();
+        }
+        function addMember() {
+          const name = $("mName").value.trim();
+          if (!name) {
+            toast("اكتب اسم العضو");
+            return;
+          }
+          state.members.push({
+            id: uid(),
+            name,
+            phone: $("mPhone").value.trim(),
+            paid: num($("mPaid").value),
+            notes: $("mNotes").value.trim(),
+            createdAt: new Date().toISOString(),
+          });
+          ["mName", "mPhone", "mPaid", "mNotes"].forEach(
+            (id) => ($(id).value = ""),
+          );
+          toast("تم إضافة العضو");
+          render();
+        }
+        function openMember(id) {
+          const m = state.members.find((x) => x.id === id);
+          if (!m) return;
+          $("editMemberId").value = id;
+          $("editMemberName").value = m.name;
+          $("editMemberPhone").value = m.phone || "";
+          $("editMemberPaid").value = m.paid || "";
+          $("editMemberNotes").value = m.notes || "";
+          openModal("memberModal");
+        }
+        function saveMemberEdit() {
+          const m = state.members.find((x) => x.id === $("editMemberId").value);
+          if (!m) return;
+          m.name = $("editMemberName").value.trim();
+          m.phone = $("editMemberPhone").value.trim();
+          m.paid = num($("editMemberPaid").value);
+          m.notes = $("editMemberNotes").value.trim();
+          closeModals();
+          toast("تم حفظ تعديل العضو");
+          render();
+        }
+        function addExpenseFromForm() {
+          const selectedMeal = selectedMealId();
+          const isMealExpense = $("exCategory").value === "وجبة" && selectedMeal;
+          if (isMealExpense) {
+            const meal = state.mealPlan.find((x) => x.id === selectedMeal);
+            if (!meal) {
+              toast("اختر وجبة صحيحة");
+              return false;
+            }
+            const mealCount = num($("exCount").value) || state.members.length || 0;
+            const mealPrice = num($("exUnitPrice").value);
+            if (mealCount <= 0 || mealPrice <= 0) {
+              toast("أدخل عدد الأفراد وسعر الفرد");
+              return false;
+            }
+            meal.date = $("exDate").value || meal.date || today();
+            meal.mealType = $("exMealType").value || meal.mealType || "أخرى";
+            meal.count = mealCount;
+            meal.unitPrice = mealPrice;
+            meal.desc = $("exDesc").value.trim() || meal.desc || "وجبة";
+            const amount = mealCount * mealPrice;
+            const payload = {
+              date: meal.date,
+              category: "وجبة",
+              memberId: "",
+              mealType: meal.mealType,
+              count: mealCount,
+              units: 1,
+              unitPrice: mealPrice,
+              amount,
+              desc: meal.desc,
+              notes: $("exNotes").value.trim() || "تم تسجيلها من مصروفات الوجبات الثابتة",
+              createdAt: new Date().toISOString(),
+            };
+            const existing = meal.expenseId ? state.expenses.find((x) => x.id === meal.expenseId) : null;
+            if (existing) Object.assign(existing, payload);
+            else {
+              const n = { id: uid(), ...payload };
+              state.expenses.push(n);
+              meal.expenseId = n.id;
+            }
+            resetExpenseForm();
+            toast("تم تسجيل الوجبة");
+            render();
+            return true;
+          }
+          const amount = calcExpenseAmount("ex");
+          if (amount <= 0) {
+            toast("أدخل قيمة المصروف");
+            return false;
+          }
+          if (!$('exDesc').value.trim()) {
+            toast("اكتب بيان المصروف");
+            return false;
+          }
+          if (expenseScope === "individual" && !$('exMember').value) {
+            toast("اختر اسم الشخص");
+            return false;
+          }
+          state.expenses.push({
+            id: uid(),
+            date: $("exDate").value || today(),
+            category: $("exCategory").value,
+            memberId: expenseScope === "individual" ? $("exMember").value : "",
+            mealType: $("exMealType").value,
+            count: num($("exCount").value),
+            units: num($("exUnits").value) || 1,
+            unitPrice: num($("exUnitPrice").value),
+            amount,
+            desc: $("exDesc").value.trim(),
+            notes: $("exNotes").value.trim(),
+            createdAt: new Date().toISOString(),
+          });
+          resetExpenseForm();
+          toast("تم إضافة المصروف");
+          render();
+          return true;
+        }
+        function resetExpenseForm() {
+          ["exManualAmount", "exDesc", "exNotes", "exUnitPrice"].forEach(
+            (id) => ($(id).value = ""),
+          );
+          $("exDate").value = today();
+          $("exCount").value = "";
+          $("exUnits").value = 1;
+          $("exMember").value = "";
+          if ($("exMealPlanSelect")) $("exMealPlanSelect").value = "";
+          const mealButtons = $("mealChoiceButtons");
+          if (mealButtons) {
+            mealButtons.dataset.selected = "";
+            $$('[data-meal-choice]', mealButtons).forEach((b) => b.classList.remove("active"));
+          }
+          setExpenseScope("group");
+          setExpenseCategory("وجبة");
+        }
+        function addMealExpense(id) {
+          const r = state.mealPlan.find((x) => x.id === id);
+          if (!r) return;
+          const amount =
+            (num(r.count) || state.members.length || 0) * num(r.unitPrice);
+          if (amount <= 0) {
+            toast("أدخل سعر الوجبة أولًا");
+            return;
+          }
+          const payload = {
+            date: r.date,
+            category: "وجبة",
+            memberId: "",
+            mealType: r.mealType,
+            count: num(r.count) || state.members.length || 0,
+            units: 1,
+            unitPrice: num(r.unitPrice),
+            amount,
+            desc: r.desc,
+            notes: "تم إنشاؤه من خطة الوجبات",
+          };
+          if (r.expenseId) {
+            const e = state.expenses.find((x) => x.id === r.expenseId);
+            if (e) Object.assign(e, payload);
+            else {
+              const n = { id: uid(), ...payload };
+              state.expenses.push(n);
+              r.expenseId = n.id;
+            }
+          } else {
+            const n = { id: uid(), ...payload };
+            state.expenses.push(n);
+            r.expenseId = n.id;
+          }
+          toast("تم حفظ مصروف الوجبة");
+          render();
+        }
+        function openExpense(id) {
+          const e = state.expenses.find((x) => x.id === id);
+          if (!e) return;
+          $("editExpenseId").value = id;
+          $("editExDate").value = e.date || today();
+          $("editExCategory").value = e.category || "أخرى";
+          $("editExMember").value = e.memberId || "";
+          $("editExMealType").value = e.mealType || "أخرى";
+          $("editExCount").value = e.count || "";
+          $("editExUnits").value = e.units || 1;
+          $("editExUnitPrice").value = e.unitPrice || "";
+          $("editExAmount").value = e.amount || "";
+          $("editExDesc").value = e.desc || "";
+          $("editExNotes").value = e.notes || "";
+          openModal("expenseModal");
+        }
+        function saveExpenseEdit() {
+          const e = state.expenses.find(
+            (x) => x.id === $("editExpenseId").value,
+          );
+          if (!e) return;
+          Object.assign(e, {
+            date: $("editExDate").value,
+            category: $("editExCategory").value,
+            memberId: $("editExMember").value,
+            mealType: $("editExMealType").value,
+            count: num($("editExCount").value),
+            units: num($("editExUnits").value) || 1,
+            unitPrice: num($("editExUnitPrice").value),
+            amount: num($("editExAmount").value),
+            desc: $("editExDesc").value.trim(),
+            notes: $("editExNotes").value.trim(),
+          });
+          closeModals();
+          toast("تم تعديل المصروف");
+          render();
+        }
+        function addRevenue() {
+          const amount = num($("rAmount").value);
+          if (amount <= 0) {
+            toast("أدخل مبلغ الإيراد");
+            return;
+          }
+          state.revenues.push({
+            id: uid(),
+            date: $("rDate").value || today(),
+            type: $("rType").value,
+            source: $("rSource").value.trim(),
+            amount,
+            notes: $("rNotes").value.trim(),
+          });
+          ["rSource", "rAmount", "rNotes"].forEach((id) => ($(id).value = ""));
+          $("rDate").value = today();
+          toast("تم إضافة الإيراد");
+          render();
+        }
+        function openRevenue(id) {
+          const r = state.revenues.find((x) => x.id === id);
+          if (!r) return;
+          $("editRevenueId").value = id;
+          $("editRDate").value = r.date || today();
+          $("editRType").value = r.type;
+          $("editRSource").value = r.source || "";
+          $("editRAmount").value = r.amount || "";
+          $("editRNotes").value = r.notes || "";
+          openModal("revenueModal");
+        }
+        function saveRevenueEdit() {
+          const r = state.revenues.find(
+            (x) => x.id === $("editRevenueId").value,
+          );
+          if (!r) return;
+          Object.assign(r, {
+            date: $("editRDate").value,
+            type: $("editRType").value,
+            source: $("editRSource").value.trim(),
+            amount: num($("editRAmount").value),
+            notes: $("editRNotes").value.trim(),
+          });
+          closeModals();
+          toast("تم تعديل الإيراد");
+          render();
+        }
+        function setAttendance(mid, status, arrival = false) {
+          const data = currentAttendance();
+          data[mid] = data[mid] || {};
+          data[mid].status = status;
+          if (arrival && !data[mid].arrivalTime)
+            data[mid].arrivalTime = new Date().toISOString();
+          toast("تم تسجيل الالتزام");
+          render();
+        }
+        function openArrival(mid) {
+          const m = state.members.find((x) => x.id === mid);
+          const rec = currentAttendance()[mid] || {};
+          $("arrivalMemberId").value = mid;
+          $("arrivalInfo").textContent = m ? m.name : "";
+          $("arrivalTime").value = dtLocal(
+            rec.arrivalTime || new Date().toISOString(),
+          );
+          $("arrivalPassword").value = "";
+          openModal("arrivalModal");
+        }
+        function checkArrivalPassword() {
+          const savedPassword = String(state.settings.adminPassword || "");
+          const enteredPassword = String($("arrivalPassword").value || "");
+          if (enteredPassword !== savedPassword) {
+            toast("كلمة السر غير صحيحة");
+            $("arrivalPassword").focus();
+            return false;
+          }
+          return true;
+        }
+        function saveArrival() {
+          if (!checkArrivalPassword()) return;
+          const mid = $("arrivalMemberId").value;
+          const data = currentAttendance();
+          data[mid] = data[mid] || {};
+          data[mid].status = "حاضر";
+          data[mid].arrivalTime =
+            localToIso($("arrivalTime").value) || new Date().toISOString();
+          closeModals();
+          toast("تم حفظ تعديل الالتزام");
+          render();
+        }
+        function removeArrival() {
+          if (!checkArrivalPassword()) return;
+          const mid = $("arrivalMemberId").value;
+          const rec = currentAttendance()[mid];
+          if (rec) delete rec.arrivalTime;
+          closeModals();
+          toast("تم مسح وقت الوصول فقط");
+          render();
+        }
+        function clearAttendanceRecord() {
+          if (!checkArrivalPassword()) return;
+          const mid = $("arrivalMemberId").value;
+          delete currentAttendance()[mid];
+          closeModals();
+          toast("تم إلغاء تسجيل الحضور والوصول");
+          render();
+        }
+        function importMembersText(text) {
+          let added = 0;
+          text
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter(Boolean)
+            .forEach((line) => {
+              const parts = line.split(/\t|,|؛/).map((x) => x.trim());
+              const name = parts[0];
+              if (name) {
+                state.members.push({
+                  id: uid(),
+                  name,
+                  phone: parts[1] || "",
+                  paid: num(parts[2]),
+                  notes: parts.slice(3).join(" "),
+                  createdAt: new Date().toISOString(),
+                });
+                added++;
+              }
+            });
+          toast("تم استيراد " + added + " اسم");
+          render();
+        }
+        function exportHtml(filename, title, html) {
+          const full = `<html dir="rtl"><head><meta charset="utf-8"><style>body{font-family:Arial}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:7px;text-align:right}th{background:#eef}
+      /* Focused update v6 */
+      :root { --royal: #0b3d91; --royal-dark: #062b68; --royal-soft: #eaf2ff; }
+      .btn:not(.danger), .btn.soft, .btn.green, .scope-btn {
+        background: linear-gradient(180deg, var(--royal), var(--royal-dark)) !important;
+        border-color: var(--royal) !important;
+        color: #fff !important;
+      }
+      .btn:not(.danger):hover, .scope-btn:hover { filter: brightness(1.05); }
+      .btn.danger { background: #b42318 !important; border-color: #b42318 !important; color: #fff !important; }
+      .manager-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .home-admin-card strong { font-size: clamp(30px, 5vw, 56px); letter-spacing: .2px; line-height: 1.15; }
+      .home-admin-card small { display: none; }
+      .manager-card, .committee-card { position: relative; overflow: hidden; }
+      .manager-card:before, .committee-card:before { content:""; position:absolute; inset-inline-start:0; top:0; width:7px; height:100%; background: linear-gradient(180deg,#0b3d91,#0aa6b7); }
+      .manager-card h3, .committee-card h3 { font-size: 20px; }
+      .card-display-line { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #dbe7f4; }
+      .card-display-line span { color: var(--muted); font-weight: 800; }
+      .card-display-line strong { color: var(--blue-dark); }
+      .modal-tag-list { min-height: 44px; padding: 10px; border: 1px dashed #c7d8ee; border-radius: 16px; background: #f8fbff; }
+      .expenses-page .hidden-field { display: none !important; }
+      .expense-studio-v6 { grid-template-columns: minmax(360px, .85fr) minmax(0, 1.15fr); }
+      .meal-fixed-panel, .other-expenses-panel { border: 1px solid #d7e8ff; border-radius: 20px; padding: 13px; margin-bottom: 13px; background: linear-gradient(180deg,#ffffff,#f4f9ff); }
+      .mini-section-title { color: var(--royal-dark); font-weight: 950; margin-bottom: 10px; font-size: 16px; }
+      .meal-fast-grid { align-items: end; }
+      .expense-chip-area { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+      .expense-chip-area button { border: 0; border-radius: 999px; padding: 10px 14px; background: #eaf2ff; color: var(--royal); font-weight: 900; }
+      .expense-chip-area button.active { background: linear-gradient(180deg,var(--royal),var(--royal-dark)); color:#fff; }
+      .expense-scope-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #d5e3f4; }
+      .expense-scope-row span { font-weight: 900; color: var(--blue-dark); margin-left: 4px; }
+      .scope-btn { border: 1px solid #c9ddf8; border-radius: 999px; padding: 8px 15px; font-weight: 900; opacity: .75; }
+      .scope-btn.active { opacity: 1; box-shadow: 0 7px 18px rgba(11,61,145,.20); }
+      #exMemberWrap:not(.hidden-field) { display: block !important; }
+      .revenue-entry-grid { grid-template-columns: repeat(6, minmax(120px, 1fr)); gap: 12px; }
+      .committee-entry-grid { grid-template-columns: minmax(170px, 1fr) minmax(170px, 1fr) 140px 140px; gap: 12px; align-items: end; }
+      .form-action-label { align-self: end; }
+      .form-action-label .btn { height: 43px; }
+      @media(max-width: 980px) { .expense-studio-v6 { grid-template-columns: 1fr; } .revenue-entry-grid, .committee-entry-grid { grid-template-columns: 1fr 1fr; } }
+      @media(max-width: 560px) { .manager-action-row, .revenue-entry-grid, .committee-entry-grid { grid-template-columns: 1fr; } .home-admin-card strong { font-size: 34px; } .expense-form-card input, .expense-form-card select, .expense-form-card textarea { font-size: 17px; } }
+
+
+
+    /* Online database sync status */
+    .cloud-sync-status {
+      position: fixed;
+      left: 18px;
+      top: 18px;
+      z-index: 120;
+      background: #ffffff;
+      color: #123b7a;
+      border: 1px solid #d9e3f0;
+      box-shadow: 0 12px 30px rgba(18,59,122,.16);
+      border-radius: 999px;
+      padding: 8px 13px;
+      font-weight: 900;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .cloud-sync-status::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #98a2b3;
+      display: inline-block;
+    }
+    .cloud-sync-status.online::before { background: #14804a; }
+    .cloud-sync-status.offline::before { background: #b42318; }
+    .cloud-sync-status.saving::before { background: #b45309; }
+    @media(max-width:820px){
+      .cloud-sync-status{top:auto;bottom:58px;left:10px;font-size:12px;padding:7px 10px;}
+    }
+    </style></head><body><h2>${esc(title)}</h2>${html}</body></html>`;
+          const blob = new Blob([full], {
+            type: "application/vnd.ms-excel;charset=utf-8",
+          });
+          downloadBlob(blob, filename);
+        }
+        function tableFromRows(headers, rows) {
+          return `<table><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+        }
+        function downloadBlob(blob, filename) {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            URL.revokeObjectURL(a.href);
+            a.remove();
+          }, 500);
+        }
+        function exportMembers() {
+          exportHtml(
+            "members.xls",
+            "الأعضاء",
+            tableFromRows(
+              [
+                "#",
+                "الاسم",
+                "التليفون",
+                "المدفوع",
+                "الباقي",
+                "الحالة",
+                "ملاحظات",
+              ],
+              state.members.map((m, i) => [
+                i + 1,
+                m.name,
+                m.phone,
+                fmt(m.paid),
+                fmt(memberRemaining(m)),
+                memberStatus(m),
+                m.notes || "",
+              ]),
+            ),
+          );
+        }
+        function exportExpenses() {
+          exportHtml(
+            "expenses.xls",
+            "المصروفات",
+            tableFromRows(
+              [
+                "#",
+                "التاريخ",
+                "البند",
+                "الشخص",
+                "البيان",
+                "العدد",
+                "الوحدات",
+                "سعر الوحدة",
+                "المبلغ",
+                "ملاحظات",
+              ],
+              state.expenses.map((e, i) => [
+                i + 1,
+                e.date,
+                e.category,
+                memberName(e.memberId) || "المؤتمر كله",
+                e.desc,
+                e.count,
+                e.units,
+                e.unitPrice,
+                e.amount,
+                e.notes || "",
+              ]),
+            ),
+          );
+        }
+        function exportRevenues() {
+          exportHtml(
+            "revenues.xls",
+            "الإيرادات الأخرى",
+            tableFromRows(
+              ["#", "التاريخ", "النوع", "المصدر", "المبلغ", "ملاحظات"],
+              state.revenues.map((r, i) => [
+                i + 1,
+                r.date,
+                r.type,
+                r.source,
+                r.amount,
+                r.notes || "",
+              ]),
+            ),
+          );
+        }
+        function exportCommittees() {
+          exportHtml(
+            "committees.xls",
+            "اللجان",
+            tableFromRows(
+              ["#", "اللجنة", "المسؤول", "المهام"],
+              state.committees.map((c, i) => [
+                i + 1,
+                c.name,
+                c.leader,
+                c.tasks,
+              ]),
+            ),
+          );
+        }
+        function exportAttendance() {
+          const rows = [];
+          state.activities.forEach((a) =>
+            state.members.forEach((m) => {
+              const r = state.attendance[a.id]?.[m.id] || {};
+              rows.push([
+                a.name,
+                m.name,
+                r.status || "",
+                r.arrivalTime
+                  ? new Date(r.arrivalTime).toLocaleString("ar-EG-u-nu-latn")
+                  : "",
+              ]);
+            }),
+          );
+          exportHtml(
+            "attendance.xls",
+            "الالتزام",
+            tableFromRows(["النشاط", "الاسم", "الحالة", "وقت الوصول"], rows),
+          );
+        }
+        function exportAll() {
+          let html = "";
+          html +=
+            "<h3>الأعضاء</h3>" +
+            tableFromRows(
+              ["#", "الاسم", "التليفون", "المدفوع", "الباقي"],
+              state.members.map((m, i) => [
+                i + 1,
+                m.name,
+                m.phone,
+                m.paid,
+                memberRemaining(m),
+              ]),
+            );
+          html +=
+            "<h3>المصروفات</h3>" +
+            tableFromRows(
+              ["#", "التاريخ", "البند", "البيان", "المبلغ"],
+              state.expenses.map((e, i) => [
+                i + 1,
+                e.date,
+                e.category,
+                e.desc,
+                e.amount,
+              ]),
+            );
+          html +=
+            "<h3>الإيرادات</h3>" +
+            tableFromRows(
+              ["#", "التاريخ", "النوع", "المصدر", "المبلغ"],
+              state.revenues.map((r, i) => [
+                i + 1,
+                r.date,
+                r.type,
+                r.source,
+                r.amount,
+              ]),
+            );
+          exportHtml("conference_all.xls", "كل الكشوف", html);
+        }
+        function wire() {
+          $("mainNav").addEventListener("click", (e) => {
+            const b = e.target.closest("button[data-page]");
+            if (b) openPage(b.dataset.page);
+          });
+          $$("[data-goto]").forEach(
+            (b) => (b.onclick = () => openPage(b.dataset.goto)),
+          );
+          $$("[data-close]").forEach((b) => (b.onclick = closeModals));
+          $$(".modal").forEach((m) =>
+            m.addEventListener("click", (e) => {
+              if (e.target === m) closeModals();
+            }),
+          );
+          document.addEventListener("input", (e) => {
+            const el = e.target;
+            if (el.dataset.setting) {
+              setPath(
+                state,
+                el.dataset.setting,
+                el.type === "number" ? num(el.value) : el.value,
+              );
+              save();
+              renderDashboard();
+            }
+            if (
+              ["exCount", "exUnits", "exUnitPrice", "exManualAmount"].includes(
+                el.id,
+              )
+            )
+              updateExpensePreview();
+          });
+          document.addEventListener("change", (e) => {
+            const el = e.target;
+            if (el.dataset.mealField) {
+              const r = state.mealPlan.find((x) => x.id === el.dataset.id);
+              if (r) {
+                r[el.dataset.mealField] = el.value;
+                render();
+              }
+            }
+            if (el.dataset.committeeField) {
+              const c = state.committees.find((x) => x.id === el.dataset.id);
+              if (c) {
+                c[el.dataset.committeeField] = el.value;
+                render();
+              }
+            }
+            if (el.id === "exMealPlanSelect") applyMealChoice(el.value);
+            if (el.id === "exCategory") setExpenseCategory(el.value);
+            if (el.id === "managerEditSelect") renderManagerEditor(el.value);
+            if (el.id === "committeeEditSelect") renderCommitteeEditor(el.value);
+          });
+          document.addEventListener(
+            "blur",
+            (e) => {
+              const el = e.target;
+              if (el.dataset.managerName) {
+                const m = state.managers.find(
+                  (x) => x.id === el.dataset.managerName,
+                );
+                if (m) {
+                  m.name = el.value.trim();
+                  render();
+                }
+              }
+            },
+            true,
+          );
+          document.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && e.target.matches("input")) {
+              if (e.target.id === "exDesc") {
+                e.preventDefault();
+                autoSubmitExpenseIfReady();
+                return;
+              }
+              if (e.target.id === "exUnitPrice" && $("exCategory")?.value === "وجبة") {
+                e.preventDefault();
+                autoSubmitMealIfReady();
+                return;
+              }
+              e.target.blur();
+              save();
+            }
+          });
+          document.addEventListener("blur", (e) => {
+            if (e.target && e.target.id === "exDesc") autoSubmitExpenseIfReady();
+            else if (e.target && e.target.id === "exUnitPrice" && $("exCategory")?.value === "وجبة") autoSubmitMealIfReady();
+            else save();
+          }, true);
+          document.addEventListener("click", (e) => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            const d = b.dataset;
+            if (b.id === "addMealFromButtonsBtn") { quickAddMealFromButtons(); return; }
+            if (d.editMember) openMember(d.editMember);
+            if (d.editExpense) openExpense(d.editExpense);
+            if (d.editRevenue) openRevenue(d.editRevenue);
+            if (d.openManager) openManagerEditor(d.openManager);
+            if (d.openCommittee) openCommitteeEditor(d.openCommittee);
+            if (d.mealChoice) applyMealChoice(d.mealChoice);
+            if (d.expScope) setExpenseScope(d.expScope);
+            if (d.deleteMeal) {
+              state.mealPlan = state.mealPlan.filter(
+                (x) => x.id !== d.deleteMeal,
+              );
+              render();
+            }
+            if (d.addMealExpense) addMealExpense(d.addMealExpense);
+            if (d.deleteCommittee) {
+              state.committees = state.committees.filter(
+                (x) => x.id !== d.deleteCommittee,
+              );
+              state.managers.forEach(
+                (m) =>
+                  (m.committeeIds = m.committeeIds.filter(
+                    (id) => id !== d.deleteCommittee,
+                  )),
+              );
+              render();
+            }
+            if (d.attStatus) setAttendance(d.mid, d.attStatus, false);
+            if (d.arriveNow) setAttendance(d.arriveNow, "حاضر", true);
+            if (d.editArrival) openArrival(d.editArrival);
+            if (d.managerAssign) {
+              const m = state.managers.find((x) => x.id === d.managerAssign);
+              const sel = document.querySelector(
+                `select[data-manager-select="${d.managerAssign}"]`,
+              );
+              if (m && sel.value && !m.committeeIds.includes(sel.value)) {
+                m.committeeIds.push(sel.value);
+                render();
+              }
+            }
+            if (d.managerUnassign) {
+              const m = state.managers.find((x) => x.id === d.managerUnassign);
+              if (m) {
+                m.committeeIds = m.committeeIds.filter(
+                  (id) => id !== d.committee,
+                );
+                render();
+              }
+            }
+            if (d.managerModalUnassign) {
+              const m = state.managers.find((x) => x.id === d.managerModalUnassign);
+              if (m) {
+                m.committeeIds = m.committeeIds.filter((id) => id !== d.committee);
+                render();
+                renderManagerEditor(m.id);
+              }
+            }
+            if (d.deleteManager) {
+              state.managers = state.managers.filter(
+                (x) => x.id !== d.deleteManager,
+              );
+              render();
+            }
+          });
+          $("saveNowBtn").onclick = () => {
+            save();
+            toast("تم الحفظ");
+          };
+          if ($("addMemberBtn")) $("addMemberBtn").onclick = addMember;
+          $("quickAddMemberBtn").onclick = addMember;
+          $("memberSearch").oninput = renderMembers;
+          $("paymentFilter").onchange = renderMembers;
+          $("openImportBtn").onclick = () => openModal("importModal");
+          $("confirmImportBtn").onclick = () => {
+            importMembersText($("importText").value);
+            $("importText").value = "";
+            closeModals();
+          };
+          $("importFile").onchange = (e) => {
+            const f = e.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = () => {
+              $("importText").value = r.result;
+            };
+            r.readAsText(f, "UTF-8");
+          };
+          $("saveMemberEditBtn").onclick = saveMemberEdit;
+          $("payFullMemberBtn").onclick = () => {
+            $("editMemberPaid").value = state.conference.fee || 0;
+            saveMemberEdit();
+          };
+          $("deleteMemberBtn").onclick = () => {
+            const id = $("editMemberId").value;
+            state.members = state.members.filter((x) => x.id !== id);
+            Object.values(state.attendance).forEach((a) => delete a[id]);
+            closeModals();
+            toast("تم حذف العضو");
+            render();
+          };
+          $("addMealRowBtn").onclick = () => {
+            state.mealPlan.push({
+              id: uid(),
+              date: today(),
+              mealType: "غداء",
+              desc: "وجبة جديدة",
+              count: state.members.length,
+              unitPrice: "",
+              expenseId: "",
+            });
+            render();
+          };
+          $("addPricedMealsBtn").onclick = () => {
+            let n = 0;
+            state.mealPlan.forEach((r) => {
+              if (num(r.unitPrice) > 0) {
+                addMealExpense(r.id);
+                n++;
+              }
+            });
+            toast("تمت معالجة " + n + " وجبة");
+          };
+          $("addExpenseBtn").onclick = addExpenseFromForm;
+          $("resetExpenseBtn").onclick = resetExpenseForm;
+          if ($("exMealPlanSelect")) {
+            $("exMealPlanSelect").addEventListener("change", (e) => applyMealChoice(e.target.value));
+            $("exMealPlanSelect").addEventListener("input", (e) => applyMealChoice(e.target.value));
+          }
+          if ($("conferenceEditBtn")) $("conferenceEditBtn").onclick = toggleConferenceEdit;
+          if ($("openManagerEditorBtn")) $("openManagerEditorBtn").onclick = () => openManagerEditor();
+          if ($("managerEditSelect")) $("managerEditSelect").onchange = (e) => renderManagerEditor(e.target.value);
+          if ($("saveManagerEditBtn")) $("saveManagerEditBtn").onclick = saveManagerEditor;
+          if ($("deleteManagerEditBtn")) $("deleteManagerEditBtn").onclick = deleteManagerEditor;
+          if ($("managerEditAssignBtn")) $("managerEditAssignBtn").onclick = () => {
+            const m = selectedManager();
+            const cid = $("managerEditCommitteeSelect").value;
+            if (!m || !cid) { toast("اختر مسؤولًا ولجنة"); return; }
+            if (!m.committeeIds.includes(cid)) m.committeeIds.push(cid);
+            render();
+            renderManagerEditor(m.id);
+          };
+          if ($("openCommitteeEditorBtn")) $("openCommitteeEditorBtn").onclick = () => openCommitteeEditor();
+          if ($("committeeEditSelect")) $("committeeEditSelect").onchange = (e) => renderCommitteeEditor(e.target.value);
+          if ($("saveCommitteeEditBtn")) $("saveCommitteeEditBtn").onclick = saveCommitteeEditor;
+          if ($("deleteCommitteeEditBtn")) $("deleteCommitteeEditBtn").onclick = deleteCommitteeEditor;
+          $$("[data-exp-tab]").forEach(
+            (b) =>
+              (b.onclick = () => {
+                $$("[data-exp-tab]").forEach((x) =>
+                  x.classList.remove("active"),
+                );
+                b.classList.add("active");
+                setExpenseCategory(
+                  b.dataset.expTab === "meal" ? "وجبة" : "إقامة",
+                );
+              }),
+          );
+          $("saveExpenseEditBtn").onclick = saveExpenseEdit;
+          $("deleteExpenseEditBtn").onclick = () => {
+            const id = $("editExpenseId").value;
+            state.expenses = state.expenses.filter((x) => x.id !== id);
+            state.mealPlan.forEach((r) => {
+              if (r.expenseId === id) r.expenseId = "";
+            });
+            closeModals();
+            toast("تم حذف المصروف");
+            render();
+          };
+          $("addRevenueBtn").onclick = addRevenue;
+          $("rDate").value = today();
+          $("saveRevenueEditBtn").onclick = saveRevenueEdit;
+          $("deleteRevenueEditBtn").onclick = () => {
+            state.revenues = state.revenues.filter(
+              (x) => x.id !== $("editRevenueId").value,
+            );
+            closeModals();
+            toast("تم حذف الإيراد");
+            render();
+          };
+          $("quickAddCommitteeBtn").onclick = () => {
+              const name = $("committeeName").value.trim();
+              if (!name) {
+                toast("اكتب اسم اللجنة");
+                return;
+              }
+              state.committees.push({
+                id: uid(),
+                name,
+                leader: $("committeeLeader").value.trim(),
+                tasks: "",
+              });
+              $("committeeName").value = "";
+              $("committeeLeader").value = "";
+              toast("تمت إضافة اللجنة");
+              render();
+            };
+          $("addManagerBtn").onclick = () => {
+            const name = $("newManagerName").value.trim();
+            if (!name) {
+              toast("اكتب اسم المسؤول");
+              return;
+            }
+            state.managers.push({ id: uid(), name, committeeIds: [] });
+            $("newManagerName").value = "";
+            render();
+          };
+          $("activitySelect").onchange = (e) => {
+            state.currentActivityId = e.target.value;
+            render();
+          };
+          $("addActivityBtn").onclick = () => {
+            const name = $("activityName").value.trim();
+            if (!name) {
+              toast("اكتب اسم النشاط");
+              return;
+            }
+            const a = { id: uid(), name };
+            state.activities.push(a);
+            state.currentActivityId = a.id;
+            $("activityName").value = "";
+            render();
+          };
+          $("deleteActivityBtn").onclick = () => {
+            const id = state.currentActivityId;
+            if (!id) return;
+            state.activities = state.activities.filter((a) => a.id !== id);
+            delete state.attendance[id];
+            state.currentActivityId = state.activities[0]?.id || "";
+            render();
+          };
+          $("attendanceSearch").oninput = renderAttendance;
+          $("saveArrivalBtn").onclick = saveArrival;
+          $("removeArrivalBtn").onclick = removeArrival;
+          if ($("clearAttendanceBtn")) $("clearAttendanceBtn").onclick = clearAttendanceRecord;
+          $("exportMembersBtn").onclick = exportMembers;
+          $("exportExpensesBtn").onclick = exportExpenses;
+          $("exportRevenuesBtn").onclick = exportRevenues;
+          $("exportCommitteesBtn").onclick = exportCommittees;
+          $("exportAttendanceBtn").onclick = exportAttendance;
+          $("exportReportBtn").onclick = () =>
+            exportHtml("report.xls", "التقرير", $("reportContent").innerHTML);
+          $("exportAllBtn").onclick = exportAll;
+          $("exportBackupBtn").onclick = () =>
+            downloadBlob(
+              new Blob([JSON.stringify(state, null, 2)], {
+                type: "application/json;charset=utf-8",
+              }),
+              "conference_backup.json",
+            );
+          $("importBackupFile").onchange = (e) => {
+            const f = e.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = () => {
+              try {
+                state = merge(defaults, JSON.parse(r.result));
+                toast("تم استيراد النسخة");
+                render();
+              } catch (err) {
+                toast("ملف غير صالح");
+              }
+            };
+            r.readAsText(f, "UTF-8");
+          };
+        }
+        fillCategorySelect("exCategory");
+        fillCategorySelect("editExCategory");
+        $("exDate").value = today();
+        $("rDate").value = today();
+        wire();
+        setExpenseScope("group");
+        resetExpenseForm();
+        render();
+        initCloudSync();
+        if ("serviceWorker" in navigator && location.protocol !== "file:") {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        }
+      })();
+    </script>
+  </body>
+</html>

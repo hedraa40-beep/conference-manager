@@ -1,0 +1,18 @@
+{
+  "name": "conference-manager-online-database",
+  "version": "12.0.0",
+  "private": true,
+  "description": "Arabic conference manager with real-time shared online database.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.18.3",
+    "socket.io": "^4.7.5"
+  }
+}
