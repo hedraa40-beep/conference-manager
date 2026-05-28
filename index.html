@@ -885,7 +885,11 @@
           grid-template-columns: 88px minmax(0, 1fr);
         }
       }
-      @media print {
+  
+    /* v13 mobile navigation fix */
+    #mainNav button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+    @media(max-width:820px){.nav button{min-height:46px}.nav{scroll-behavior:smooth}}
+    @media print {
         .sidebar,
         .actions,
         .btn,
@@ -4661,10 +4665,19 @@
           exportHtml("conference_all.xls", "كل الكشوف", html);
         }
         function wire() {
-          $("mainNav").addEventListener("click", (e) => {
-            const b = e.target.closest("button[data-page]");
-            if (b) openPage(b.dataset.page);
-          });
+          // Mobile-safe navigation: works with click + touch, and prevents the horizontal mobile nav from swallowing taps.
+          const navEl = $("mainNav");
+          function handleNavTap(e) {
+            const b = e.target.closest && e.target.closest("button[data-page]");
+            if (!b || !navEl.contains(b)) return;
+            e.preventDefault();
+            e.stopPropagation();
+            openPage(b.dataset.page);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+          navEl.querySelectorAll("button[data-page]").forEach((b) => (b.type = "button"));
+          navEl.addEventListener("click", handleNavTap, true);
+          navEl.addEventListener("touchend", handleNavTap, { capture: true, passive: false });
           $$("[data-goto]").forEach(
             (b) => (b.onclick = () => openPage(b.dataset.goto)),
           );
