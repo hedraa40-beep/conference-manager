@@ -1,10 +1,10 @@
-// v21: no-cache service worker. It clears old caches and then unregisters without navigation loops.
-self.addEventListener('install', event => { self.skipWaiting(); });
-self.addEventListener('activate', event => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.map(k => caches.delete(k)));
-    if (self.registration && self.registration.unregister) await self.registration.unregister();
+// v19: no cache service worker. Unregister and clear caches.
+self.addEventListener('install', function(event){ self.skipWaiting(); });
+self.addEventListener('activate', function(event){
+  event.waitUntil((async function(){
+    try { var keys = await caches.keys(); await Promise.all(keys.map(function(k){ return caches.delete(k); })); } catch(e) {}
+    try { await self.registration.unregister(); } catch(e) {}
+    try { var clients = await self.clients.matchAll({type:'window'}); clients.forEach(function(c){ c.navigate(c.url); }); } catch(e) {}
   })());
 });
-self.addEventListener('fetch', event => { return; });
+self.addEventListener('fetch', function(event){ return; });
