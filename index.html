@@ -5047,23 +5047,44 @@
           $("exportReportBtn").onclick = () =>
             exportHtml("report.xls", "التقرير", $("reportContent").innerHTML);
           const uploadServerBtn = $("uploadServerBtn");
-          if (uploadServerBtn) uploadServerBtn.onclick = () => {
+          if (uploadServerBtn) uploadServerBtn.onclick = async () => {
             save();
-            const ok = forceCloudSaveNow();
-            toast(ok ? "تم رفع بيانات هذا الجهاز للسيرفر" : "لا يوجد اتصال بالسيرفر الآن");
+            try {
+              updateCloudStatus("جار رفع البيانات للسيرفر", "saving");
+              const res = await fetch("/api/state", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ clientId: CLIENT_ID, state })
+              });
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              const payload = await res.json();
+              lastCloudJson = JSON.stringify(state);
+              updateCloudStatus("متزامن أونلاين", "online");
+              toast("تم رفع بيانات هذا الجهاز للسيرفر");
+            } catch (err) {
+              console.error(err);
+              updateCloudStatus("تعذر الرفع", "offline");
+              toast("تعذر رفع البيانات للسيرفر");
+            }
           };
           const pullServerBtn = $("pullServerBtn");
           if (pullServerBtn) pullServerBtn.onclick = async () => {
             try {
-              const res = await fetch("/api/state", { cache: "no-store" });
+              updateCloudStatus("جار تحميل بيانات السيرفر", "saving");
+              const res = await fetch("/api/state?_=" + Date.now(), { cache: "no-store" });
+              if (!res.ok) throw new Error("HTTP " + res.status);
               const payload = await res.json();
-              if (payload && payload.state) {
+              if (payload && payload.state && isMeaningfulState(payload.state)) {
                 applyRemoteState(payload.state);
+                updateCloudStatus("متزامن أونلاين", "online");
                 toast("تم تحميل بيانات السيرفر");
               } else {
+                updateCloudStatus("متصل أونلاين", "online");
                 toast("لا توجد بيانات محفوظة على السيرفر");
               }
             } catch (err) {
+              console.error(err);
+              updateCloudStatus("تعذر التحميل", "offline");
               toast("تعذر تحميل بيانات السيرفر");
             }
           };

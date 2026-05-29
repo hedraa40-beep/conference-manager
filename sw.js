@@ -1,18 +1,14 @@
-const CACHE_NAME = "conference-manager-v14-hard-mobile-fix";
-
-self.addEventListener("install", () => {
+const CACHE_NAME = 'conference-manager-v15-no-cache';
+self.addEventListener('install', event => {
   self.skipWaiting();
 });
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
-  );
-  self.clients.claim();
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
-
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  if (url.pathname.startsWith("/socket.io") || url.pathname.startsWith("/api")) return;
-  event.respondWith(fetch(event.request, { cache: "no-store" }).catch(() => caches.match(event.request)));
+self.addEventListener('fetch', event => {
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
