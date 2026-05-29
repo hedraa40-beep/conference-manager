@@ -2497,7 +2497,7 @@
   <script>
     // v18 early cleanup: remove old service workers/caches before app code runs on mobile.
     (function(){
-      var VERSION = 'v18';
+      var VERSION = 'v19';
       function clearCaches(){
         if (!window.caches || !caches.keys) return Promise.resolve();
         return caches.keys().then(function(keys){ return Promise.all(keys.map(function(k){ return caches.delete(k); })); });
@@ -2511,9 +2511,9 @@
       }
       cleanServiceWorkers().then(function(hadController){
         try {
-          if (hadController && !sessionStorage.getItem('conference_mobile_clean_' + VERSION)) {
-            sessionStorage.setItem('conference_mobile_clean_' + VERSION, '1');
-            var url = location.origin + location.pathname + '?v=18&fresh=' + Date.now() + (location.hash || '');
+          if (hadController && !__SAFE_SS__.getItem('conference_mobile_clean_' + VERSION)) {
+            __SAFE_SS__.setItem('conference_mobile_clean_' + VERSION, '1');
+            var url = location.origin + location.pathname + '?v=19&fresh=' + Date.now() + (location.hash || '');
             location.replace(url);
           }
         } catch(e) {}
@@ -3142,6 +3142,64 @@
     <div id="cloudSyncStatus" class="cloud-sync-status offline">غير متصل</div>
 
     <script>
+      // v19: Safe storage wrapper for mobile browsers that block localStorage.
+      // It prevents "Access is denied" from breaking the app and falls back to memory.
+      var __MEMORY_STORAGE__ = {};
+      var __SAFE_LS__ = {
+        getItem: function (key) {
+          try {
+            var s = window["localStorage"];
+            if (s) return s.getItem(key);
+          } catch (e) {}
+          return Object.prototype.hasOwnProperty.call(__MEMORY_STORAGE__, key) ? __MEMORY_STORAGE__[key] : null;
+        },
+        setItem: function (key, value) {
+          var v = String(value);
+          try {
+            var s = window["localStorage"];
+            if (s) { s.setItem(key, v); return; }
+          } catch (e) {}
+          __MEMORY_STORAGE__[key] = v;
+        },
+        removeItem: function (key) {
+          try {
+            var s = window["localStorage"];
+            if (s) s.removeItem(key);
+          } catch (e) {}
+          delete __MEMORY_STORAGE__[key];
+        },
+        clear: function () {
+          try {
+            var s = window["localStorage"];
+            if (s) s.clear();
+          } catch (e) {}
+          __MEMORY_STORAGE__ = {};
+        }
+      };
+
+      var __MEMORY_SESSION__ = {};
+      var __SAFE_SS__ = {
+        getItem: function (key) {
+          try { var s = window["sessionStorage"]; if (s) return s.getItem(key); } catch (e) {}
+          return Object.prototype.hasOwnProperty.call(__MEMORY_SESSION__, key) ? __MEMORY_SESSION__[key] : null;
+        },
+        setItem: function (key, value) {
+          var v = String(value);
+          try { var s = window["sessionStorage"]; if (s) { s.setItem(key, v); return; } } catch (e) {}
+          __MEMORY_SESSION__[key] = v;
+        },
+        removeItem: function (key) {
+          try { var s = window["sessionStorage"]; if (s) s.removeItem(key); } catch (e) {}
+          delete __MEMORY_SESSION__[key];
+        },
+        clear: function () {
+          try { var s = window["sessionStorage"]; if (s) s.clear(); } catch (e) {}
+          __MEMORY_SESSION__ = {};
+        }
+      };
+    </script>
+
+    <script>
       (function () {
         "use strict";
         const STORAGE_KEY = "conference_manager_rebuilt_v1";
@@ -3340,7 +3398,7 @@
         }
         function load() {
           try {
-            const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+            const raw = JSON.parse(__SAFE_LS__.getItem(STORAGE_KEY) || "{}");
             const s = merge(defaults, raw);
             if (!s.currentActivityId && s.activities[0])
               s.currentActivityId = s.activities[0].id;
@@ -3382,11 +3440,11 @@
         let cloudSaveTimer = null;
         let lastCloudJson = "";
         const CLIENT_ID_KEY = STORAGE_KEY + "_client_id";
-        const CLIENT_ID = localStorage.getItem(CLIENT_ID_KEY) || uid();
-        localStorage.setItem(CLIENT_ID_KEY, CLIENT_ID);
+        const CLIENT_ID = __SAFE_LS__.getItem(CLIENT_ID_KEY) || uid();
+        __SAFE_LS__.setItem(CLIENT_ID_KEY, CLIENT_ID);
         function save() {
           const json = JSON.stringify(state);
-          localStorage.setItem(STORAGE_KEY, json);
+          __SAFE_LS__.setItem(STORAGE_KEY, json);
           if (!applyingRemoteState) scheduleCloudSave(json);
         }
         function updateCloudStatus(text, mode) {
@@ -3429,7 +3487,7 @@
         }
         function forceCloudSaveNow() {
           const json = JSON.stringify(state);
-          localStorage.setItem(STORAGE_KEY, json);
+          __SAFE_LS__.setItem(STORAGE_KEY, json);
           lastCloudJson = json;
           updateCloudStatus("جار رفع البيانات للسيرفر", "saving");
           fetch(window.location.origin + "/api/state", {
@@ -3454,7 +3512,7 @@
           applyingRemoteState = true;
           state = merge(defaults, remoteState);
           ensureCoreActivities();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          __SAFE_LS__.setItem(STORAGE_KEY, JSON.stringify(state));
           render();
           applyingRemoteState = false;
           updateCloudStatus("متزامن أونلاين", "online");
@@ -3704,6 +3762,21 @@
           renderAttendance();
           renderReports();
         }
+        window.__CM_DIRECT__ = {
+          getState: function(){ return clone(state); },
+          setState: function(nextState){
+            if(!nextState || typeof nextState !== 'object') return false;
+            applyingRemoteState = true;
+            state = merge(defaults, nextState);
+            ensureCoreActivities();
+            applyingRemoteState = false;
+            render();
+            updateCloudStatus('متصل بالسيرفر', 'online');
+            return true;
+          },
+          render: function(){ render(); },
+          status: function(text, mode){ updateCloudStatus(text, mode); }
+        };
         function renderStaticSelects() {
           fillSelect(
             "exMember",
@@ -4557,7 +4630,200 @@
     @media(max-width:820px){
       .cloud-sync-status{top:auto;bottom:58px;left:10px;font-size:12px;padding:7px 10px;}
     }
-    </style></head><body><h2>${esc(title)}</h2>${html}</body></html>`;
+    </style></head><body><h2>${esc(title)}</h2>${html}
+<script>
+// v19 extra: force API status and provide fallback buttons without localStorage dependency.
+(function(){
+  function toast(msg){
+    var t=document.getElementById('toast');
+    if(t){t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)} else alert(msg);
+  }
+  function status(txt, cls){
+    var el=document.getElementById('cloudSyncStatus');
+    if(!el) return;
+    el.textContent=txt;
+    el.classList.remove('online','offline','saving');
+    if(cls) el.classList.add(cls);
+  }
+  async function apiGet(){
+    var res=await fetch('/api/state?_='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return await res.json();
+  }
+  async function apiPost(state){
+    var res=await fetch('/api/state',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({clientId:'mobile-v19-'+Date.now(),state:state})});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return await res.json();
+  }
+  window.__v19LoadServer = async function(){
+    try{
+      status('جار تحميل بيانات السيرفر','saving');
+      var payload=await apiGet();
+      if(!payload || !payload.state) throw new Error('لا توجد بيانات محفوظة على السيرفر');
+      __SAFE_LS__.setItem('conference_manager_rebuilt_v1', JSON.stringify(payload.state));
+      status('تم تحميل بيانات السيرفر','online');
+      toast('تم تحميل بيانات السيرفر. سيتم تحديث الصفحة الآن');
+      setTimeout(function(){ location.replace(location.pathname+'?v=19&t='+Date.now()+location.hash); },700);
+    }catch(e){
+      status('تعذر تحميل بيانات السيرفر','offline');
+      toast('فشل التحميل: '+(e.message||e));
+    }
+  };
+  window.__v19UploadLocal = async function(){
+    try{
+      status('جار رفع بيانات الجهاز','saving');
+      var raw=__SAFE_LS__.getItem('conference_manager_rebuilt_v1');
+      var st=raw?JSON.parse(raw):null;
+      if(!st) throw new Error('لا توجد بيانات على هذا الجهاز');
+      await apiPost(st);
+      status('تم الرفع للسيرفر','online');
+      toast('تم رفع بيانات هذا الجهاز للسيرفر');
+    }catch(e){
+      status('تعذر الرفع للسيرفر','offline');
+      toast('فشل الرفع: '+(e.message||e));
+    }
+  };
+  function bind(){
+    var cards=Array.from(document.querySelectorAll('.backup-card,button,label'));
+    cards.forEach(function(card){
+      var txt=(card.innerText||card.textContent||'').replace(/\s+/g,' ');
+      if(txt.indexOf('تحميل بيانات السيرفر')>=0){
+        card.onclick=function(e){e.preventDefault();e.stopPropagation();window.__v19LoadServer();return false;};
+        card.ontouchend=function(e){e.preventDefault();e.stopPropagation();window.__v19LoadServer();return false;};
+      }
+      if(txt.indexOf('رفع بيانات هذا الجهاز للسيرفر')>=0){
+        card.onclick=function(e){e.preventDefault();e.stopPropagation();window.__v19UploadLocal();return false;};
+        card.ontouchend=function(e){e.preventDefault();e.stopPropagation();window.__v19UploadLocal();return false;};
+      }
+    });
+    apiGet().then(function(payload){
+      status('متصل بالسيرفر','online');
+      // If current page is still showing dashes, pull once automatically.
+      try{
+        var visibleDash = document.body && document.body.innerText && document.body.innerText.indexOf('إداري المؤتمر')>=0 && document.body.innerText.indexOf('أبونا بطرس')<0;
+        if(visibleDash && payload && payload.state){
+          __SAFE_LS__.setItem('conference_manager_rebuilt_v1', JSON.stringify(payload.state));
+          setTimeout(function(){ location.replace(location.pathname+'?v=19&t='+Date.now()+location.hash); },900);
+        }
+      }catch(e){}
+    }).catch(function(){status('تعذر الاتصال بالسيرفر','offline');});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+  setTimeout(bind,800);
+})();
+</script>
+
+<script>
+// v20: direct API-only sync for mobile browsers that block storage and/or socket.
+(function(){
+  var API_PATH = '/api/state';
+  var VERSION = '20';
+  function el(id){ return document.getElementById(id); }
+  function toast(msg){
+    var t = el('toast');
+    if(t){ t.textContent = msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, 2600); }
+    else { try { alert(msg); } catch(e) {} }
+  }
+  function status(txt, cls){
+    if(window.__CM_DIRECT__ && window.__CM_DIRECT__.status) window.__CM_DIRECT__.status(txt, cls);
+    var s = el('cloudSyncStatus');
+    if(s){ s.textContent = txt; s.classList.remove('online','offline','saving'); if(cls) s.classList.add(cls); }
+  }
+  async function apiGet(){
+    var res = await fetch(API_PATH + '?_=' + Date.now(), {cache:'no-store', credentials:'same-origin'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+  async function apiPost(state){
+    var res = await fetch(API_PATH, {
+      method:'POST', cache:'no-store', credentials:'same-origin',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({clientId:'v20-' + Date.now(), state: state})
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+  async function directDownload(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    try{
+      status('جار تحميل بيانات السيرفر', 'saving');
+      var payload = await apiGet();
+      if(!payload || !payload.state) throw new Error('لا توجد بيانات محفوظة على السيرفر');
+      if(window.__CM_DIRECT__ && window.__CM_DIRECT__.setState){
+        window.__CM_DIRECT__.setState(payload.state);
+        status('تم تحميل بيانات السيرفر', 'online');
+        toast('تم تحميل بيانات السيرفر');
+      } else {
+        status('تم التحميل، أعد فتح الصفحة', 'online');
+        toast('تم تحميل البيانات، أعد فتح الصفحة');
+      }
+    } catch(err){
+      status('تعذر تحميل بيانات السيرفر', 'offline');
+      toast('تعذر تحميل بيانات السيرفر: ' + (err && err.message ? err.message : err));
+    }
+    return false;
+  }
+  async function directUpload(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    try{
+      status('جار رفع بيانات الجهاز للسيرفر', 'saving');
+      var state = window.__CM_DIRECT__ && window.__CM_DIRECT__.getState ? window.__CM_DIRECT__.getState() : null;
+      if(!state) throw new Error('لا توجد بيانات جاهزة للرفع من الصفحة');
+      await apiPost(state);
+      status('تم رفع البيانات للسيرفر', 'online');
+      toast('تم رفع بيانات هذا الجهاز للسيرفر');
+    } catch(err){
+      status('تعذر رفع البيانات', 'offline');
+      toast('تعذر رفع البيانات: ' + (err && err.message ? err.message : err));
+    }
+    return false;
+  }
+  function bind(){
+    var pull = el('pullServerBtn');
+    var upload = el('uploadServerBtn');
+    if(pull && pull.dataset.v20 !== '1'){
+      pull.dataset.v20 = '1';
+      pull.onclick = directDownload;
+      pull.addEventListener('click', directDownload, true);
+      pull.addEventListener('touchend', directDownload, {capture:true, passive:false});
+      pull.addEventListener('pointerup', directDownload, true);
+    }
+    if(upload && upload.dataset.v20 !== '1'){
+      upload.dataset.v20 = '1';
+      upload.onclick = directUpload;
+      upload.addEventListener('click', directUpload, true);
+      upload.addEventListener('touchend', directUpload, {capture:true, passive:false});
+      upload.addEventListener('pointerup', directUpload, true);
+    }
+  }
+  async function pingAndMaybeLoad(){
+    try{
+      var payload = await apiGet();
+      status('متصل بالسيرفر', 'online');
+      var needsServer = false;
+      try {
+        var name = document.getElementById('heroName');
+        needsServer = name && (name.textContent || '').trim() === '—';
+      } catch(e) {}
+      if(payload && payload.state && (location.hash === '#backup' || needsServer || /[?&]force=1/.test(location.search))){
+        if(window.__CM_DIRECT__ && window.__CM_DIRECT__.setState) window.__CM_DIRECT__.setState(payload.state);
+      }
+    } catch(e){ status('تعذر الاتصال بالسيرفر', 'offline'); }
+  }
+  document.addEventListener('click', function(e){
+    var target = e.target && e.target.closest && e.target.closest('#pullServerBtn,#uploadServerBtn');
+    if(!target) return;
+    if(target.id === 'pullServerBtn') return directDownload(e);
+    if(target.id === 'uploadServerBtn') return directUpload(e);
+  }, true);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ bind(); setTimeout(pingAndMaybeLoad, 300); });
+  else { bind(); setTimeout(pingAndMaybeLoad, 300); }
+  setTimeout(bind, 800); setTimeout(bind, 1800); setTimeout(bind, 3500);
+  setInterval(function(){ bind(); pingAndMaybeLoad(); }, 20000);
+})();
+</script>
+
+</body></html>`;
           const blob = new Blob([full], {
             type: "application/vnd.ms-excel;charset=utf-8",
           });
@@ -5342,14 +5608,14 @@
         return res.json();
       }
       async function apiPost() {
-        var raw = localStorage.getItem(STORAGE_KEY);
+        var raw = __SAFE_LS__.getItem(STORAGE_KEY);
         if (!raw) throw new Error("لا توجد بيانات محلية");
         var state = JSON.parse(raw);
         var res = await fetch("/api/state", {
           method: "POST",
           cache: "no-store",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clientId: localStorage.getItem(STORAGE_KEY + "_client_id") || "mobile-v17", state: state })
+          body: JSON.stringify({ clientId: __SAFE_LS__.getItem(STORAGE_KEY + "_client_id") || "mobile-v17", state: state })
         });
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();
@@ -5361,12 +5627,12 @@
           var payload = await apiGet();
           if (payload && payload.state) {
             var serverJson = JSON.stringify(payload.state);
-            var localJson = localStorage.getItem(STORAGE_KEY) || "";
-            localStorage.setItem(STORAGE_KEY, serverJson);
-            localStorage.setItem(STORAGE_KEY + "_server_updated_at", payload.updatedAt || "");
+            var localJson = __SAFE_LS__.getItem(STORAGE_KEY) || "";
+            __SAFE_LS__.setItem(STORAGE_KEY, serverJson);
+            __SAFE_LS__.setItem(STORAGE_KEY + "_server_updated_at", payload.updatedAt || "");
             status("متصل بالسيرفر", "online");
             if (options.reload !== false && serverJson !== localJson) {
-              sessionStorage.setItem("conference_v17_loaded", payload.updatedAt || String(Date.now()));
+              __SAFE_SS__.setItem("conference_v17_loaded", payload.updatedAt || String(Date.now()));
               location.reload();
               return;
             }
@@ -5425,12 +5691,12 @@
 
 
   <script>
-    // v18 final mobile-safe sync: direct API only, removes old handlers by cloning buttons.
+    // v19 mobile-safe sync: direct API only, removes old handlers by cloning buttons.
     (function () {
       'use strict';
       var STORAGE_KEY = 'conference_manager_rebuilt_v1';
       var API_PATH = '/api/state';
-      var VERSION = 'v18';
+      var VERSION = 'v19';
       function byId(id) { return document.getElementById(id); }
       function setStatus(text, mode) {
         var el = byId('cloudSyncStatus');
@@ -5463,11 +5729,11 @@
         return safeParseJson(text);
       }
       async function postLocalState() {
-        var raw = localStorage.getItem(STORAGE_KEY);
+        var raw = __SAFE_LS__.getItem(STORAGE_KEY);
         if (!raw) throw new Error('لا توجد بيانات محلية على هذا الجهاز');
         var parsed = safeParseJson(raw);
-        var clientId = localStorage.getItem(STORAGE_KEY + '_client_id') || ('mobile-' + Date.now());
-        localStorage.setItem(STORAGE_KEY + '_client_id', clientId);
+        var clientId = __SAFE_LS__.getItem(STORAGE_KEY + '_client_id') || ('mobile-' + Date.now());
+        __SAFE_LS__.setItem(STORAGE_KEY + '_client_id', clientId);
         var text = await fetchText(location.origin + API_PATH, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -5484,11 +5750,11 @@
             showToast('لا توجد بيانات محفوظة على السيرفر');
             return;
           }
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(payload.state));
-          localStorage.setItem(STORAGE_KEY + '_server_updated_at', payload.updatedAt || '');
+          __SAFE_LS__.setItem(STORAGE_KEY, JSON.stringify(payload.state));
+          __SAFE_LS__.setItem(STORAGE_KEY + '_server_updated_at', payload.updatedAt || '');
           setStatus('تم تحميل بيانات السيرفر', 'online');
           showToast('تم تحميل بيانات السيرفر');
-          setTimeout(function(){ location.replace(location.origin + location.pathname + '?v=18&loaded=' + Date.now() + (location.hash || '')); }, 700);
+          setTimeout(function(){ location.replace(location.origin + location.pathname + '?v=19&loaded=' + Date.now() + (location.hash || '')); }, 700);
         } catch (err) {
           console.error('v18 download failed:', err);
           setStatus('فشل التحميل: ' + (err.message || err), 'offline');
@@ -5536,6 +5802,199 @@
       setInterval(ping, 20000);
     })();
   </script>
+
+
+<script>
+// v19 extra: force API status and provide fallback buttons without localStorage dependency.
+(function(){
+  function toast(msg){
+    var t=document.getElementById('toast');
+    if(t){t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)} else alert(msg);
+  }
+  function status(txt, cls){
+    var el=document.getElementById('cloudSyncStatus');
+    if(!el) return;
+    el.textContent=txt;
+    el.classList.remove('online','offline','saving');
+    if(cls) el.classList.add(cls);
+  }
+  async function apiGet(){
+    var res=await fetch('/api/state?_='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return await res.json();
+  }
+  async function apiPost(state){
+    var res=await fetch('/api/state',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({clientId:'mobile-v19-'+Date.now(),state:state})});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return await res.json();
+  }
+  window.__v19LoadServer = async function(){
+    try{
+      status('جار تحميل بيانات السيرفر','saving');
+      var payload=await apiGet();
+      if(!payload || !payload.state) throw new Error('لا توجد بيانات محفوظة على السيرفر');
+      __SAFE_LS__.setItem('conference_manager_rebuilt_v1', JSON.stringify(payload.state));
+      status('تم تحميل بيانات السيرفر','online');
+      toast('تم تحميل بيانات السيرفر. سيتم تحديث الصفحة الآن');
+      setTimeout(function(){ location.replace(location.pathname+'?v=19&t='+Date.now()+location.hash); },700);
+    }catch(e){
+      status('تعذر تحميل بيانات السيرفر','offline');
+      toast('فشل التحميل: '+(e.message||e));
+    }
+  };
+  window.__v19UploadLocal = async function(){
+    try{
+      status('جار رفع بيانات الجهاز','saving');
+      var raw=__SAFE_LS__.getItem('conference_manager_rebuilt_v1');
+      var st=raw?JSON.parse(raw):null;
+      if(!st) throw new Error('لا توجد بيانات على هذا الجهاز');
+      await apiPost(st);
+      status('تم الرفع للسيرفر','online');
+      toast('تم رفع بيانات هذا الجهاز للسيرفر');
+    }catch(e){
+      status('تعذر الرفع للسيرفر','offline');
+      toast('فشل الرفع: '+(e.message||e));
+    }
+  };
+  function bind(){
+    var cards=Array.from(document.querySelectorAll('.backup-card,button,label'));
+    cards.forEach(function(card){
+      var txt=(card.innerText||card.textContent||'').replace(/\s+/g,' ');
+      if(txt.indexOf('تحميل بيانات السيرفر')>=0){
+        card.onclick=function(e){e.preventDefault();e.stopPropagation();window.__v19LoadServer();return false;};
+        card.ontouchend=function(e){e.preventDefault();e.stopPropagation();window.__v19LoadServer();return false;};
+      }
+      if(txt.indexOf('رفع بيانات هذا الجهاز للسيرفر')>=0){
+        card.onclick=function(e){e.preventDefault();e.stopPropagation();window.__v19UploadLocal();return false;};
+        card.ontouchend=function(e){e.preventDefault();e.stopPropagation();window.__v19UploadLocal();return false;};
+      }
+    });
+    apiGet().then(function(payload){
+      status('متصل بالسيرفر','online');
+      // If current page is still showing dashes, pull once automatically.
+      try{
+        var visibleDash = document.body && document.body.innerText && document.body.innerText.indexOf('إداري المؤتمر')>=0 && document.body.innerText.indexOf('أبونا بطرس')<0;
+        if(visibleDash && payload && payload.state){
+          __SAFE_LS__.setItem('conference_manager_rebuilt_v1', JSON.stringify(payload.state));
+          setTimeout(function(){ location.replace(location.pathname+'?v=19&t='+Date.now()+location.hash); },900);
+        }
+      }catch(e){}
+    }).catch(function(){status('تعذر الاتصال بالسيرفر','offline');});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+  setTimeout(bind,800);
+})();
+</script>
+
+<script>
+// v20: direct API-only sync for mobile browsers that block storage and/or socket.
+(function(){
+  var API_PATH = '/api/state';
+  var VERSION = '20';
+  function el(id){ return document.getElementById(id); }
+  function toast(msg){
+    var t = el('toast');
+    if(t){ t.textContent = msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, 2600); }
+    else { try { alert(msg); } catch(e) {} }
+  }
+  function status(txt, cls){
+    if(window.__CM_DIRECT__ && window.__CM_DIRECT__.status) window.__CM_DIRECT__.status(txt, cls);
+    var s = el('cloudSyncStatus');
+    if(s){ s.textContent = txt; s.classList.remove('online','offline','saving'); if(cls) s.classList.add(cls); }
+  }
+  async function apiGet(){
+    var res = await fetch(API_PATH + '?_=' + Date.now(), {cache:'no-store', credentials:'same-origin'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+  async function apiPost(state){
+    var res = await fetch(API_PATH, {
+      method:'POST', cache:'no-store', credentials:'same-origin',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({clientId:'v20-' + Date.now(), state: state})
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  }
+  async function directDownload(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    try{
+      status('جار تحميل بيانات السيرفر', 'saving');
+      var payload = await apiGet();
+      if(!payload || !payload.state) throw new Error('لا توجد بيانات محفوظة على السيرفر');
+      if(window.__CM_DIRECT__ && window.__CM_DIRECT__.setState){
+        window.__CM_DIRECT__.setState(payload.state);
+        status('تم تحميل بيانات السيرفر', 'online');
+        toast('تم تحميل بيانات السيرفر');
+      } else {
+        status('تم التحميل، أعد فتح الصفحة', 'online');
+        toast('تم تحميل البيانات، أعد فتح الصفحة');
+      }
+    } catch(err){
+      status('تعذر تحميل بيانات السيرفر', 'offline');
+      toast('تعذر تحميل بيانات السيرفر: ' + (err && err.message ? err.message : err));
+    }
+    return false;
+  }
+  async function directUpload(e){
+    if(e){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+    try{
+      status('جار رفع بيانات الجهاز للسيرفر', 'saving');
+      var state = window.__CM_DIRECT__ && window.__CM_DIRECT__.getState ? window.__CM_DIRECT__.getState() : null;
+      if(!state) throw new Error('لا توجد بيانات جاهزة للرفع من الصفحة');
+      await apiPost(state);
+      status('تم رفع البيانات للسيرفر', 'online');
+      toast('تم رفع بيانات هذا الجهاز للسيرفر');
+    } catch(err){
+      status('تعذر رفع البيانات', 'offline');
+      toast('تعذر رفع البيانات: ' + (err && err.message ? err.message : err));
+    }
+    return false;
+  }
+  function bind(){
+    var pull = el('pullServerBtn');
+    var upload = el('uploadServerBtn');
+    if(pull && pull.dataset.v20 !== '1'){
+      pull.dataset.v20 = '1';
+      pull.onclick = directDownload;
+      pull.addEventListener('click', directDownload, true);
+      pull.addEventListener('touchend', directDownload, {capture:true, passive:false});
+      pull.addEventListener('pointerup', directDownload, true);
+    }
+    if(upload && upload.dataset.v20 !== '1'){
+      upload.dataset.v20 = '1';
+      upload.onclick = directUpload;
+      upload.addEventListener('click', directUpload, true);
+      upload.addEventListener('touchend', directUpload, {capture:true, passive:false});
+      upload.addEventListener('pointerup', directUpload, true);
+    }
+  }
+  async function pingAndMaybeLoad(){
+    try{
+      var payload = await apiGet();
+      status('متصل بالسيرفر', 'online');
+      var needsServer = false;
+      try {
+        var name = document.getElementById('heroName');
+        needsServer = name && (name.textContent || '').trim() === '—';
+      } catch(e) {}
+      if(payload && payload.state && (location.hash === '#backup' || needsServer || /[?&]force=1/.test(location.search))){
+        if(window.__CM_DIRECT__ && window.__CM_DIRECT__.setState) window.__CM_DIRECT__.setState(payload.state);
+      }
+    } catch(e){ status('تعذر الاتصال بالسيرفر', 'offline'); }
+  }
+  document.addEventListener('click', function(e){
+    var target = e.target && e.target.closest && e.target.closest('#pullServerBtn,#uploadServerBtn');
+    if(!target) return;
+    if(target.id === 'pullServerBtn') return directDownload(e);
+    if(target.id === 'uploadServerBtn') return directUpload(e);
+  }, true);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ bind(); setTimeout(pingAndMaybeLoad, 300); });
+  else { bind(); setTimeout(pingAndMaybeLoad, 300); }
+  setTimeout(bind, 800); setTimeout(bind, 1800); setTimeout(bind, 3500);
+  setInterval(function(){ bind(); pingAndMaybeLoad(); }, 20000);
+})();
+</script>
 
 </body>
 </html>
