@@ -5121,8 +5121,115 @@
         resetExpenseForm();
         render();
         initCloudSync();
+
+        // v16: مزامنة مباشرة مع السيرفر عبر API، بدون الاعتماد على Socket فقط.
+        let directSyncBusy = false;
+        function apiUrl(path) {
+          return window.location.origin + path;
+        }
+        async function checkDirectApiConnection(silent) {
+          try {
+            const res = await fetch(apiUrl("/api/state?_=" + Date.now()), { cache: "no-store" });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            if (!silent) updateCloudStatus("متصل بالسيرفر", "online");
+            cloudReady = true;
+            return true;
+          } catch (err) {
+            if (!silent) updateCloudStatus("غير متصل بالسيرفر", "offline");
+            return false;
+          }
+        }
+        async function directUploadToServer() {
+          if (directSyncBusy) return;
+          directSyncBusy = true;
+          try {
+            save();
+            updateCloudStatus("جار رفع البيانات للسيرفر", "saving");
+            const res = await fetch(apiUrl("/api/state"), {
+              method: "POST",
+              cache: "no-store",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ clientId: CLIENT_ID, state })
+            });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            await res.json().catch(() => ({}));
+            lastCloudJson = JSON.stringify(state);
+            cloudReady = true;
+            updateCloudStatus("متزامن أونلاين", "online");
+            toast("تم رفع بيانات هذا الجهاز للسيرفر");
+          } catch (err) {
+            console.error(err);
+            updateCloudStatus("تعذر الرفع للسيرفر", "offline");
+            toast("تعذر رفع البيانات للسيرفر");
+          } finally {
+            directSyncBusy = false;
+          }
+        }
+        async function directPullFromServer(silent) {
+          if (directSyncBusy) return;
+          directSyncBusy = true;
+          try {
+            if (!silent) updateCloudStatus("جار تحميل بيانات السيرفر", "saving");
+            const res = await fetch(apiUrl("/api/state?_=" + Date.now()), { cache: "no-store" });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const payload = await res.json();
+            if (payload && payload.state && isMeaningfulState(payload.state)) {
+              lastCloudJson = JSON.stringify(payload.state);
+              applyRemoteState(payload.state);
+              cloudReady = true;
+              updateCloudStatus("متزامن أونلاين", "online");
+              if (!silent) toast("تم تحميل بيانات السيرفر");
+            } else {
+              cloudReady = true;
+              updateCloudStatus("متصل بالسيرفر", "online");
+              if (!silent) toast("لا توجد بيانات محفوظة على السيرفر");
+            }
+          } catch (err) {
+            console.error(err);
+            updateCloudStatus("تعذر تحميل بيانات السيرفر", "offline");
+            if (!silent) toast("تعذر تحميل بيانات السيرفر");
+          } finally {
+            directSyncBusy = false;
+          }
+        }
+        function wireDirectSyncButtons() {
+          if (document.documentElement.dataset.directSyncV16 === "1") return;
+          document.documentElement.dataset.directSyncV16 = "1";
+          let lastTap = 0;
+          function handle(e) {
+            const target = e.target && e.target.closest && e.target.closest("#uploadServerBtn,#pullServerBtn");
+            if (!target) return;
+            const now = Date.now();
+            if (now - lastTap < 450) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+            }
+            lastTap = now;
+            e.preventDefault();
+            e.stopPropagation();
+            if (target.id === "uploadServerBtn") directUploadToServer();
+            if (target.id === "pullServerBtn") directPullFromServer(false);
+          }
+          ["click", "pointerup", "touchend"].forEach((ev) => {
+            document.addEventListener(ev, handle, true);
+          });
+        }
+        wireDirectSyncButtons();
+        checkDirectApiConnection(false);
+        setTimeout(() => directPullFromServer(true), 900);
+        setInterval(() => checkDirectApiConnection(false), 12000);
+        window.conferenceDirectSync = {
+          upload: directUploadToServer,
+          pull: () => directPullFromServer(false),
+          check: () => checkDirectApiConnection(false)
+        };
+
         if ("serviceWorker" in navigator && location.protocol !== "file:") {
-          navigator.serviceWorker.register("/sw.js").catch(() => {});
+          navigator.serviceWorker.getRegistrations()
+            .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+            .then(() => navigator.serviceWorker.register("/sw.js?v=16"))
+            .catch(() => {});
         }
       })();
     </script>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'conference-manager-v15-no-cache';
+const CACHE_NAME = 'conference-manager-v16-direct-api-no-cache';
 self.addEventListener('install', event => {
   self.skipWaiting();
 });
@@ -10,5 +10,7 @@ self.addEventListener('activate', event => {
   })());
 });
 self.addEventListener('fetch', event => {
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  event.respondWith(
+    fetch(event.request, { cache: 'no-store' }).catch(() => new Response('Offline', { status: 503 }))
+  );
 });
