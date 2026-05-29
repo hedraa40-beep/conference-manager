@@ -1,10 +1,22 @@
-// v19: no cache service worker. Unregister and clear caches.
-self.addEventListener('install', function(event){ self.skipWaiting(); });
-self.addEventListener('activate', function(event){
-  event.waitUntil((async function(){
-    try { var keys = await caches.keys(); await Promise.all(keys.map(function(k){ return caches.delete(k); })); } catch(e) {}
-    try { await self.registration.unregister(); } catch(e) {}
-    try { var clients = await self.clients.matchAll({type:'window'}); clients.forEach(function(c){ c.navigate(c.url); }); } catch(e) {}
+// v22: no-cache service worker. It clears old caches and unregisters itself.
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    } catch (e) {}
+    try {
+      await self.registration.unregister();
+    } catch (e) {}
+    try {
+      const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of clientsList) client.navigate(client.url);
+    } catch (e) {}
   })());
 });
-self.addEventListener('fetch', function(event){ return; });
+self.addEventListener('fetch', event => {
+  return;
+});
