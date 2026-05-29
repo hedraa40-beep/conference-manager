@@ -1,16 +1,13 @@
-const CACHE_NAME = 'conference-manager-v16-direct-api-no-cache';
-self.addEventListener('install', event => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', event => {
+self.addEventListener("install", event => { self.skipWaiting(); });
+self.addEventListener("activate", event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(keys.map(k => caches.delete(k)));
-    await self.clients.claim();
+    await self.registration.unregister();
+    const clientsList = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of clientsList) {
+      try { client.navigate(client.url); } catch (e) {}
+    }
   })());
 });
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request, { cache: 'no-store' }).catch(() => new Response('Offline', { status: 503 }))
-  );
-});
+// v17: no fetch handler. Browser always uses the network.
