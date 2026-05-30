@@ -31,7 +31,17 @@ button,input,select,textarea{font-family:inherit;font-size:14px} button{cursor:p
 /* v3 requested clean computer layout */
 .members-tools{display:grid;grid-template-columns:minmax(230px,1fr) 170px auto;align-items:center}.members-tools .search{max-width:none}.members-tools .money-strip{justify-content:flex-start;flex-wrap:nowrap}.manager-selected{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;min-height:34px}.selected-chip{display:inline-flex;align-items:center;border:1px solid #b7efcf;background:#ecfdf3;color:#166534;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900}.empty-chip{display:inline-flex;border:1px dashed #cfe2fb;background:#f8fbff;color:var(--muted);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:900}.manager-card details{margin-top:8px}.manager-card summary{list-style:none}.manager-card summary::-webkit-details-marker{display:none}#expenseLogBtn{min-width:90px}label small{color:var(--muted);font-weight:800}@media(max-width:900px){.members-tools{grid-template-columns:1fr}.members-tools .money-strip{flex-wrap:wrap}.manager-selected{margin-bottom:8px}}
 
+
+.sync-status{display:inline-flex;align-items:center;gap:7px;border:1px solid #d7e8ff;background:#f7fbff;color:var(--blue);border-radius:999px;padding:7px 11px;font-weight:900}
+.sync-status.ok{background:#ecfdf3;border-color:#abefc6;color:var(--green)}
+.sync-status.bad{background:#fff1f1;border-color:#ffd2d2;color:var(--red)}
+.sync-status.wait{background:#fff7ed;border-color:#fed7aa;color:var(--amber)}
+.code-box{direction:ltr;text-align:left;white-space:pre-wrap;background:#0f172a;color:#e2e8f0;border-radius:16px;padding:14px;overflow:auto;font-family:Consolas,monospace!important;font-size:12.5px;line-height:1.6}
+.sync-grid{display:grid;grid-template-columns:minmax(280px,.9fr) minmax(0,1.1fr);gap:12px;align-items:start}
+@media(max-width:900px){.sync-grid{grid-template-columns:1fr}}
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="app">
@@ -125,7 +135,34 @@ button,input,select,textarea{font-family:inherit;font-size:14px} button{cursor:p
     </section>
 
     <section id="backup" class="page">
-      <div class="topbar"><div class="title"><h2>النسخ الاحتياطي</h2></div></div>
+      <div class="topbar"><div class="title"><h2>النسخ الاحتياطي والمزامنة</h2></div><span id="syncStatus" class="sync-status">غير متصل</span></div>
+      <div class="sync-grid">
+        <div class="panel">
+          <h3>مزامنة أونلاين Supabase</h3>
+          <div class="form-grid">
+            <label>Supabase Project URL<input id="syncUrl" dir="ltr" placeholder="https://xxxx.supabase.co"></label>
+            <label>Supabase anon public key<textarea id="syncKey" dir="ltr" rows="4" placeholder="eyJhbGciOi..."></textarea></label>
+            <label>اسم ملف المزامنة / الغرفة<input id="syncRoom" dir="ltr" value="main"></label>
+          </div>
+          <div class="actions" style="margin-top:12px">
+            <button class="btn primary" data-action="sync-connect">حفظ وتشغيل المزامنة</button>
+            <button class="btn green" data-action="sync-upload">رفع بيانات هذا الجهاز</button>
+            <button class="btn soft" data-action="sync-download">تحميل بيانات السحابة</button>
+            <button class="btn danger" data-action="sync-disconnect">قطع الاتصال</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>SQL المطلوب في Supabase</h3>
+          <pre class="code-box" id="syncSql">create table if not exists public.conference_states (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.conference_states disable row level security;</pre>
+          <button class="btn small" data-action="copy-sql">نسخ SQL</button>
+        </div>
+      </div>
       <div class="backup-grid"><div class="backup-card"><h3>تصدير نسخة كاملة</h3><button class="btn primary" data-action="export-backup">تحميل نسخة</button></div><div class="backup-card"><h3>استيراد نسخة</h3><input type="file" id="backupFile" accept="application/json,.json"></div><div class="backup-card"><h3>تصدير شامل Excel</h3><button class="btn soft" data-action="export" data-export="all">تحميل Excel شامل</button></div></div>
       <div class="panel danger-zone"><h3>تنبيه</h3><button class="btn danger" data-action="reset-all">مسح كل البيانات</button></div>
     </section>
@@ -136,6 +173,7 @@ button,input,select,textarea{font-family:inherit;font-size:14px} button{cursor:p
 (function(){
 'use strict';
 const STORAGE_KEY='conference_manager_cans_mobile_v3';
+const SYNC_CONFIG_KEY='conference_manager_cans_supabase_config_v1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const uid=()=>`id${Math.random().toString(36).slice(2,9)}${Date.now().toString(36).slice(-4)}`;
 const today=()=>new Date().toISOString().slice(0,10);
@@ -148,6 +186,9 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const dateText=d=>{if(!d)return '—';const x=new Date(d+'T12:00:00');return isNaN(x)?latinDigits(d):x.toLocaleDateString(AR_LATN,{weekday:'long',year:'numeric',month:'long',day:'numeric'})};
 const shortDate=d=>{if(!d)return '—';const x=new Date(d+'T12:00:00');return isNaN(x)?latinDigits(d):x.toLocaleDateString(AR_LATN,{day:'2-digit',month:'short',year:'numeric'})};
 const clone=o=>JSON.parse(JSON.stringify(o));
+const syncDefaults=()=>({url:'',key:'',room:'main'});
+const loadSyncConfig=()=>{try{return Object.assign(syncDefaults(),JSON.parse(localStorage.getItem(SYNC_CONFIG_KEY)||'{}'))}catch{return syncDefaults()}};
+const saveSyncConfig=c=>localStorage.setItem(SYNC_CONFIG_KEY,JSON.stringify(Object.assign(syncDefaults(),c||{})));
 const mealPlan=()=>[
  ['2026-06-29','غداء','غداء يوم الاثنين 29/6/2026'],['2026-06-29','عشاء','عشاء يوم الاثنين 29/6/2026'],['2026-06-30','فطار','فطار يوم الثلاثاء 30/6/2026'],
  ['2026-06-30','غداء','غداء يوم الثلاثاء 30/6/2026'],['2026-06-30','عشاء','عشاء يوم الثلاثاء 30/6/2026'],['2026-07-01','فطار','فطار يوم الأربعاء 1/7/2026'],
@@ -156,22 +197,37 @@ const mealPlan=()=>[
 const base=()=>({conference:{name:'كنز ولا CANS',place:'بيت الإيمان - أسيوط',admin:'أبونا بطرس',start_date:'2026-06-29',end_date:'2026-07-02',member_fee:0,notes:''},settings:{admin_password:'1234',hall_rate:200,pool_rate:2500,kitchen_rate:0,stay_nights:3},managers:['رامز رمزي','شنودة بخيت','هدرا عزيز'].map(name=>({id:uid(),name,committeeIds:[]})),members:[],expenses:[],revenues:[],committees:['لجنة السكرتارية','لجنة التسكين','لجنة التغذية','لجنة الميديا والتصوير','لجنة الترانيم','لجنة النظام','لجنة الورش','لجنة المسرح والترفيه','لجنة الطلبات والخدمات'].map(name=>({id:uid(),name,leader:'',tasks:'',members:[]})),activities:['قداس 1','قداس 2','محاضرة 1','محاضرة 2','محاضرة 3','محاضرة 4','محاضرة 5','ورشة 1','ورشة 2','ورشة 3','ورشة 4','ورشة 5'].map(name=>({id:uid(),name})),arrivals:{},mealPlan:mealPlan(),currentActivityId:null,currentCommitteeId:null,selectedMealId:null,expenseTab:'meal',expenseLogOpen:false});
 const merge=(a,b)=>{const out=clone(a);if(!b||typeof b!=='object')return out;Object.keys(b).forEach(k=>{if(Array.isArray(b[k]))out[k]=b[k];else if(b[k]&&typeof b[k]==='object'&&out[k]&&typeof out[k]==='object'&&!Array.isArray(out[k]))out[k]=merge(out[k],b[k]);else out[k]=b[k]});return out};
 const App={
- data:base(),
- init(){this.data=this.load();this.fix();this.bind();this.render();},
+ data:base(),syncClient:null,syncChannel:null,syncTimer:null,syncPoll:null,syncApplying:false,syncPushing:false,syncConfig:loadSyncConfig(),syncState:'غير متصل',
+ init(){this.data=this.load();this.fix();this.bind();this.render();this.initSync();},
  load(){try{return merge(base(),JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'))}catch{return base()}},
- save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(this.data));},
+ save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(this.data));if(!this.syncApplying)this.queueSync();this.renderSyncStatus();},
+ setSyncState(txt,cls=''){this.syncState=txt;const el=$('#syncStatus');if(el){el.textContent=txt;el.className='sync-status '+cls;}},
+ renderSyncSettings(){const c=this.syncConfig||loadSyncConfig();const u=$('#syncUrl'),k=$('#syncKey'),r=$('#syncRoom');if(u&&document.activeElement!==u)u.value=c.url||'';if(k&&document.activeElement!==k)k.value=c.key||'';if(r&&document.activeElement!==r)r.value=c.room||'main';this.renderSyncStatus();},
+ renderSyncStatus(){const has=this.syncConfig&&this.syncConfig.url&&this.syncConfig.key;if(!has)return this.setSyncState('غير متصل','');if(this.syncClient)return this.setSyncState(this.syncPushing?'جار رفع البيانات':'متصل أونلاين',this.syncPushing?'wait':'ok');this.setSyncState('بيانات الاتصال محفوظة','wait');},
+ getSyncForm(){return {url:($('#syncUrl')?.value||'').trim(),key:($('#syncKey')?.value||'').trim(),room:($('#syncRoom')?.value||'main').trim()||'main'}},
+ hasSyncConfig(){return !!(this.syncConfig&&this.syncConfig.url&&this.syncConfig.key&&this.syncConfig.room)},
+ async initSync(){this.syncConfig=loadSyncConfig();this.renderSyncSettings();if(this.hasSyncConfig())await this.connectSync(false);},
+ async connectSync(showToast=true){try{this.syncConfig=Object.assign(syncDefaults(),this.syncConfig||loadSyncConfig());if(!this.hasSyncConfig())return this.setSyncState('أدخل بيانات Supabase','bad');if(!window.supabase||!window.supabase.createClient)return this.setSyncState('تعذر تحميل مكتبة Supabase','bad');if(this.syncChannel){try{await this.syncClient.removeChannel(this.syncChannel)}catch{}}if(this.syncPoll)clearInterval(this.syncPoll);this.syncClient=window.supabase.createClient(this.syncConfig.url,this.syncConfig.key);this.setSyncState('جار الاتصال...','wait');await this.pullRemote(false);this.subscribeSync();this.syncPoll=setInterval(()=>this.pullRemote(false,true),8000);this.renderSyncStatus();if(showToast)this.toast('تم تشغيل المزامنة');}catch(err){this.setSyncState('خطأ في المزامنة','bad');this.toast(err.message||'تعذر الاتصال');}},
+ async manualConnect(){const c=this.getSyncForm();if(!c.url||!c.key)return this.toast('أدخل رابط Supabase و anon key');this.syncConfig=c;saveSyncConfig(c);await this.connectSync(true);},
+ subscribeSync(){if(!this.syncClient||!this.syncConfig.room)return;this.syncChannel=this.syncClient.channel('conference_state_'+this.syncConfig.room).on('postgres_changes',{event:'*',schema:'public',table:'conference_states',filter:`id=eq.${this.syncConfig.room}`},p=>{if(p.new&&p.new.data)this.applyRemote(p.new.data,false)}).subscribe();},
+ queueSync(){if(!this.hasSyncConfig()||!this.syncClient)return;clearTimeout(this.syncTimer);this.syncTimer=setTimeout(()=>this.pushRemote(false),700);},
+ async pushRemote(force=false){if(!this.hasSyncConfig())return this.toast('شغّل المزامنة أولًا');if(!this.syncClient)await this.connectSync(false);if(this.syncApplying)return;if(!force&&this.syncPushing)return;try{this.syncPushing=true;this.renderSyncStatus();const {error}=await this.syncClient.from('conference_states').upsert({id:this.syncConfig.room,data:this.data,updated_at:new Date().toISOString()},{onConflict:'id'});if(error)throw error;if(force)this.toast('تم رفع بيانات هذا الجهاز للسحابة');}catch(err){this.setSyncState('فشل الرفع','bad');this.toast(err.message||'فشل رفع البيانات');}finally{this.syncPushing=false;this.renderSyncStatus();}},
+ async pullRemote(manual=false,silent=false){if(!this.hasSyncConfig())return this.toast('شغّل المزامنة أولًا');if(!this.syncClient)await this.connectSync(false);try{if(manual)this.setSyncState('جار تحميل البيانات...','wait');const {data,error}=await this.syncClient.from('conference_states').select('data').eq('id',this.syncConfig.room).maybeSingle();if(error)throw error;if(data&&data.data){this.applyRemote(data.data,manual);}else{await this.pushRemote(true);}if(manual)this.toast('تم تحميل بيانات السحابة');}catch(err){this.setSyncState('فشل التحميل','bad');if(!silent)this.toast(err.message||'فشل تحميل البيانات');}},
+ applyRemote(remote,showToast=false){this.syncApplying=true;try{this.data=merge(base(),remote||{});localStorage.setItem(STORAGE_KEY,JSON.stringify(this.data));this.fix();this.render();if(showToast)this.toast('تم تحديث البيانات من السحابة');}finally{this.syncApplying=false;this.renderSyncStatus();}},
+ async disconnectSync(){if(this.syncPoll)clearInterval(this.syncPoll);this.syncPoll=null;if(this.syncChannel&&this.syncClient){try{await this.syncClient.removeChannel(this.syncChannel)}catch{}}this.syncChannel=null;this.syncClient=null;localStorage.removeItem(SYNC_CONFIG_KEY);this.syncConfig=syncDefaults();this.renderSyncSettings();this.toast('تم قطع الاتصال');},
+ copySql(){const txt=$('#syncSql')?.textContent||'';navigator.clipboard?.writeText(txt);this.toast('تم نسخ SQL');},
  toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(this.toastTimer);this.toastTimer=setTimeout(()=>t.classList.remove('show'),1800)},
  fix(){const d=this.data;d.members=Array.isArray(d.members)?d.members:[];d.expenses=Array.isArray(d.expenses)?d.expenses:[];d.revenues=Array.isArray(d.revenues)?d.revenues:[];d.committees=Array.isArray(d.committees)?d.committees:[];d.activities=Array.isArray(d.activities)?d.activities:[];d.managers=Array.isArray(d.managers)&&d.managers.length?d.managers:base().managers;d.managers=d.managers.map((m,i)=>typeof m==='string'?{id:uid(),name:m,committeeIds:[]}:Object.assign({id:uid(),name:`إداري مساعد ${i+1}`,committeeIds:[]},m,{committeeIds:Array.isArray(m.committeeIds)?m.committeeIds:[]}));d.mealPlan=Array.isArray(d.mealPlan)&&d.mealPlan.length?d.mealPlan:mealPlan();d.arrivals=d.arrivals&&typeof d.arrivals==='object'?d.arrivals:{};d.committees=d.committees.map(c=>typeof c==='string'?{id:uid(),name:c,leader:'',tasks:'',members:[]}:Object.assign({id:uid(),name:'لجنة',leader:'',tasks:'',members:[]},c,{members:Array.isArray(c.members)?c.members:[]}));d.activities=d.activities.map(a=>typeof a==='string'?{id:uid(),name:a}:Object.assign({id:uid(),name:'نشاط'},a));d.members=d.members.map(m=>Object.assign({id:uid(),name:'',phone:'',paid:0,notes:''},m));d.expenses=d.expenses.map(e=>Object.assign({id:uid(),date:today(),category:'أخرى',memberId:'',mealType:'',count:1,unitPrice:0,amount:0,desc:'',notes:''},e,{count:num(e.count)||1,unitPrice:num(e.unitPrice),amount:num(e.amount)||num(e.count||1)*num(e.unitPrice)}));d.revenues=d.revenues.map(r=>Object.assign({id:uid(),date:today(),type:'أخرى',source:'',amount:0,notes:''},r));if(!d.currentActivityId&&d.activities[0])d.currentActivityId=d.activities[0].id;if(!d.currentCommitteeId&&d.committees[0])d.currentCommitteeId=d.committees[0].id;const memberIds=new Set(d.members.map(m=>m.id));const legacy=Object.keys(d.arrivals).some(k=>memberIds.has(k)&&typeof d.arrivals[k]!=='object');if(legacy){const old=d.arrivals;d.arrivals={};d.arrivals[d.currentActivityId||'default']=old;}this.save();},
  totals(){const d=this.data, count=d.members.length, fee=num(d.conference.member_fee), due=count*fee, paid=d.members.reduce((s,m)=>s+num(m.paid),0), rev=d.revenues.reduce((s,r)=>s+num(r.amount),0), exp=d.expenses.reduce((s,e)=>s+num(e.amount),0);return{count,fee,due,paid,remaining:Math.max(0,due-paid),rev,exp,balance:paid+rev-exp,realCost:count?exp/count:0,meals:d.expenses.filter(e=>e.category==='وجبة').reduce((s,e)=>s+num(e.amount),0)}} ,
- bind(){document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.action;if(b.dataset.page)this.go(b.dataset.page);if(b.dataset.go)this.go(b.dataset.go);if(b.dataset.expTab)this.setExpTab(b.dataset.expTab);if(b.dataset.meal)this.selectMeal(b.dataset.meal);if(b.dataset.cat)this.pickCategory(b.dataset.cat);if(b.dataset.committee)this.selectCommittee(b.dataset.committee);if(a)this.action(a,b);});document.addEventListener('change',e=>this.changed(e));document.addEventListener('blur',e=>{if(e.target.matches('[data-bind],[data-kind]'))this.changed(e);},true);document.addEventListener('input',e=>{if(['exCount','exUnitPrice','exManual'].includes(e.target.id))this.expensePreview();if(['memberSearch','paymentFilter','attendanceSearch'].includes(e.target.id))this.render();});document.addEventListener('keydown',e=>{if(e.key==='Enter'&&['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)){e.preventDefault();e.target.blur();}});$('#backupFile').addEventListener('change',e=>this.importBackup(e));},
+ bind(){document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.action;if(b.dataset.page)this.go(b.dataset.page);if(b.dataset.go)this.go(b.dataset.go);if(b.dataset.expTab)this.setExpTab(b.dataset.expTab);if(b.dataset.meal)this.selectMeal(b.dataset.meal);if(b.dataset.cat)this.pickCategory(b.dataset.cat);if(b.dataset.committee)this.selectCommittee(b.dataset.committee);if(a)this.action(a,b);});document.addEventListener('change',e=>this.changed(e));document.addEventListener('blur',e=>{if(e.target.matches('[data-bind],[data-kind]'))this.changed(e);},true);document.addEventListener('input',e=>{if(['exCount','exUnitPrice','exManual'].includes(e.target.id))this.expensePreview();if(['memberSearch','paymentFilter','attendanceSearch'].includes(e.target.id))this.render();});document.addEventListener('keydown',e=>{if(e.key==='Enter'&&['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)){e.preventDefault();e.target.blur();}});$('#backupFile')?.addEventListener('change',e=>this.importBackup(e));},
  go(id){$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('#nav button').forEach(n=>n.classList.toggle('active',n.dataset.page===id));window.scrollTo({top:0,behavior:'smooth'});this.render();},
  action(a,b){({
-  'save-now':()=>{this.save();this.toast('تم الحفظ')},'add-member':()=>this.addMember(),'pay-all':()=>this.payAll(),'clear-payments':()=>this.clearPayments(),'toggle-import':()=>$('#importPanel').classList.toggle('hidden'),'import-members':()=>this.importMembers(),'add-expense':()=>this.addExpense(),'reset-expense':()=>this.resetExpense(),'toggle-expense-log':()=>this.toggleExpenseLog(),'add-revenue':()=>this.addRevenue(),'add-committee':()=>this.addCommittee(),'add-activity':()=>this.addActivity(),'delete-activity':()=>this.deleteActivity(),'clear-activity':()=>this.clearActivity(),'export-backup':()=>this.exportBackup(),'reset-all':()=>this.resetAll(),'export':()=>this.exportData(b.dataset.export)
+  'save-now':()=>{this.save();this.toast('تم الحفظ')},'add-member':()=>this.addMember(),'pay-all':()=>this.payAll(),'clear-payments':()=>this.clearPayments(),'toggle-import':()=>$('#importPanel').classList.toggle('hidden'),'import-members':()=>this.importMembers(),'add-expense':()=>this.addExpense(),'reset-expense':()=>this.resetExpense(),'toggle-expense-log':()=>this.toggleExpenseLog(),'add-revenue':()=>this.addRevenue(),'add-committee':()=>this.addCommittee(),'add-activity':()=>this.addActivity(),'delete-activity':()=>this.deleteActivity(),'clear-activity':()=>this.clearActivity(),'sync-connect':()=>this.manualConnect(),'sync-upload':()=>this.pushRemote(true),'sync-download':()=>this.pullRemote(true),'sync-disconnect':()=>this.disconnectSync(),'copy-sql':()=>this.copySql(),'export-backup':()=>this.exportBackup(),'reset-all':()=>this.resetAll(),'export':()=>this.exportData(b.dataset.export)
  }[a]||(()=>{}))();},
  changed(e){const el=e.target;if(el.matches('input,textarea'))el.value=latinDigits(el.value);if(el.dataset.bind)this.setPath(el.dataset.bind,el.value);if(el.dataset.kind)this.updateRow(el);if(el.dataset.managerCommittee)this.updateManagerCommittee(el);if(el.id==='activitySelect'){this.data.currentActivityId=el.value;this.save();this.renderAttendance();this.renderReports();}if(el.id==='exCategory')this.pickCategory(el.value,false);},
  setPath(path,val){const parts=path.split('.');let o=this.data;while(parts.length>1)o=o[parts.shift()];o[parts[0]]=val;this.fix();this.render();},
  updateRow(el){const d=this.data, id=el.dataset.id, field=el.dataset.field, value=el.value, list=d[el.dataset.kind];const row=list.find(x=>x.id===id);if(!row)return;row[field]=['paid','amount','count','unitPrice'].includes(field)?num(value):value;if(el.dataset.kind==='expenses'&&(field==='count'||field==='unitPrice'))row.amount=num(row.count||1)*num(row.unitPrice);this.save();this.render();},
- render(){this.renderBindings();this.renderDashboard();this.renderMembers();this.renderExpenses();this.renderRevenues();this.renderCommittees();this.renderAttendance();this.renderReports();},
+ render(){this.renderBindings();this.renderDashboard();this.renderMembers();this.renderExpenses();this.renderRevenues();this.renderCommittees();this.renderAttendance();this.renderReports();this.renderSyncSettings();},
  renderBindings(){const d=this.data;$$('[data-bind]').forEach(el=>{const val=el.dataset.bind.split('.').reduce((o,k)=>o?.[k],d)??'';if(document.activeElement!==el)el.value=val;});},
  renderDashboard(){const d=this.data,t=this.totals();$('#heroName').textContent=d.conference.name||'—';$('#heroPlace').textContent=d.conference.place||'—';$('#heroStart').textContent=dateText(d.conference.start_date);$('#heroEnd').textContent=dateText(d.conference.end_date);$('#homeAdmin').value=d.conference.admin||'';$('#kpiGrid').innerHTML=[['عدد الأعضاء',t.count],['مدفوع الأعضاء',money(t.paid)],['كل المصروفات',money(t.exp)],['الرصيد الحالي',money(t.balance)],['تكلفة الفرد الحقيقية',money(t.realCost)]].map(x=>`<article class="kpi"><span>${x[0]}</span><strong>${x[1]}</strong></article>`).join('');$('#managerList').innerHTML=d.managers.map((m,i)=>{const selected=d.committees.filter(c=>(m.committeeIds||[]).includes(c.id));return `<div class="manager-card"><h3>إداري مساعد ${i+1}</h3><label>الاسم<input data-kind="managers" data-id="${m.id}" data-field="name" value="${esc(m.name)}" autocomplete="off"></label><div class="manager-selected" data-manager-selected="${m.id}">${selected.length?selected.map(c=>`<span class="selected-chip">${esc(c.name)}</span>`).join(''):'<span class="empty-chip">لم يتم اختيار لجان</span>'}</div><details><summary>اختيار اللجان من كل اللجان</summary><div class="manager-committees">${d.committees.map(c=>`<label><input type="checkbox" data-manager-committee="${m.id}" value="${c.id}" ${(m.committeeIds||[]).includes(c.id)?'checked':''}><span>${esc(c.name)}</span></label>`).join('')||'<span class="empty-chip">لا توجد لجان</span>'}</div></details></div>`}).join('');},
 
