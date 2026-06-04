@@ -1,0 +1,1 @@
+{"name":"conference-manager-rebuild","version":"1.0.0","private":true,"type":"module","scripts":{"start":"npx serve .","test":"python tests/tests_check.py"}}
